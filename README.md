@@ -54,7 +54,7 @@ The assembler files will also be located in the `<TOOLCHAIN>` directory.
 
 ## Usage
 
-To run just call:
+To run the benchmark call:
 ```
 ./bwBench-<TOOLCHAIN>
 ```
