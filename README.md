@@ -32,8 +32,12 @@ OPENMP   = -fopenmp
 make
 ```
 
-You can build multiple toolchains in the same directory, but notice that the Makefile is only acting on the one currently set.
-Intermediate build results are located in the `<TOOLCHAIN>` directory.
+You can build multiple toolchains in the same directory, but notice that the Makefile is only acting on the one currently set. Intermediate build results are located in the `<TOOLCHAIN>` directory.
+
+To output the executed commands use:
+```
+make Q=
+```
 
 4. Clean up with:
 ```
