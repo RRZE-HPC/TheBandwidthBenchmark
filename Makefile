@@ -1,3 +1,4 @@
+# Supported: GCC, CLANG, ICC
 TAG = GCC
 
 #CONFIGURE BUILD SYSTEM
