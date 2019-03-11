@@ -67,7 +67,7 @@ We recommend to use likwid-pin for benchmarking:
 likwid-pin -c 0-3 ./bwbench-GCC  
 ```
 
-Example output for threaded version:
+Example output for threaded execution:
 ```
 -------------------------------------------------------------
 [pthread wrapper] 
