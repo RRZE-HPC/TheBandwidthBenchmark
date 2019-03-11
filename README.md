@@ -3,7 +3,7 @@
 This is a collection of simple streaming kernels for teaching purposes.
 It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/.
 
-It contains the following streaming kernels and the corrsponding data access pattern (Notation: S - store, L - load, WA - write allocate):
+It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate):
 
 * init: S1
 * sum: L1
