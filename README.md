@@ -5,14 +5,14 @@ It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/.
 
 It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate):
 
-* init: S1
-* sum: L1
-* copy: L1, S1, WA
-* update: L1, S1
-* triad: L2, S1, WA
-* daxpy: L2, S1
-* striad: L3, S1, WA
-* sdaxpy: L3, S1
+* init (S1, WA): Initilize an array. Store only.
+* sum (L1): Vector reduction. Load only.
+* copy  (L1, S1, WA): Classic memcopy.
+* update (L1, S1): Update a vector. Also load + store but without write allocate.
+* triad (L2, S1, WA): Stream triad - `a = b + b * scalar`.
+* daxpy (L2, S1): Daxpy - `a = a + b * scalar`.
+* striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
+* sdaxpy (L3, S1): Schoenauer triad without write allocate - `a = a + b * c`.
 
 
 ## Build
