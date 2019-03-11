@@ -1,7 +1,7 @@
 # The Bandwidth Benchmark
 
 This is a collection of simple streaming kernels for teaching purposes.
-It is heavily inspired by John McCalpin's [https://www.cs.virginia.edu/stream/ stream benchmark].
+It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/.
 
 ## Build
 
