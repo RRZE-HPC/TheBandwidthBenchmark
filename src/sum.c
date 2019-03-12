@@ -36,7 +36,7 @@ double sum(
     double sum = 0.0;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for simd reduction(+:sum) 
     for (int i=0; i<N; i++) {
         sum += a[i];
     }

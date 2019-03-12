@@ -1,5 +1,5 @@
 # Supported: GCC, CLANG, ICC
-TAG = GCC
+TAG ?= GCC
 
 #CONFIGURE BUILD SYSTEM
 TARGET	   = bwbench-$(TAG)
