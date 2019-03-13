@@ -3,12 +3,12 @@
 This is a collection of simple streaming kernels for teaching purposes.
 It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/ benchmark.
 
-It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate):
+It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate). All variables are vectors, s is a scalar:
 
-* init (S1, WA): Initilize an array. Store only.
-* sum (L1): Vector reduction. Load only.
-* copy  (L1, S1, WA): Classic memcopy.
-* update (L1, S1): Update a vector. Also load + store but without write allocate.
+* init (S1, WA): Initilize an array: `a = s`. Store only.
+* sum (L1): Vector reduction: `s += a`. Load only.
+* copy  (L1, S1, WA): Classic memcopy: `a = b`.
+* update (L1, S1): Update vector: `a = a * scalar`. Also load + store but without write allocate.
 * triad (L2, S1, WA): Stream triad - `a = b + b * scalar`.
 * daxpy (L2, S1): Daxpy - `a = a + b * scalar`.
 * striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
