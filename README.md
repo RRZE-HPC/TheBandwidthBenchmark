@@ -18,18 +18,11 @@ As added benefit the code is a blueprint for a minimal benchmarking application 
 
 ## Build
 
-1. Configure the toolchain to use in the `Makefile`:
+1. Configure the toolchain and additional options in `config.mk`:
 ```
 TAG = GCC  # Supported GCC, CLANG, ICC
-```
+ENABLE_OPENMP = false
 
-2. Review the flags for toolchain in the corresponding included file, e.g. `include_GCC.mk`. OpenMP is disabled per default, you can enable it by uncommenting the OpenMP flag:
-```
-OPENMP   = -fopenmp
-```
-
-3. Adjust options set in config.mk:
-```
 OPTIONS  =  -DSIZE=40000000ull
 OPTIONS +=  -DNTIMES=10
 OPTIONS +=  -DARRAY_ALIGNMENT=64
@@ -40,7 +33,7 @@ OPTIONS +=  -DARRAY_ALIGNMENT=64
 
 The verbosity options enable detailed output about affinity settings, allocation sizes and timer resolution.
 
-4. Build with:
+2. Build with:
 ```
 make
 ```
@@ -52,7 +45,7 @@ To output the executed commands use:
 make Q=
 ```
 
-5. Clean up with:
+3. Clean up with:
 ```
 make clean
 ```
@@ -63,7 +56,7 @@ make distclean
 ```
 to clean intermediate build results and binary.
 
-6. (Optional) Generate assembler:
+4. (Optional) Generate assembler:
 ```
 make asm
 ```
