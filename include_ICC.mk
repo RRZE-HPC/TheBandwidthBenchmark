@@ -2,8 +2,8 @@ CC  = icc
 LINKER = $(CC)
 
 OPENMP   = -qopenmp
-CFLAGS   = -Ofast -xhost -std=c11 $(OPENMP)
-LFLAGS   = $(OPENMP)
+CFLAGS   = -Ofast -xhost -std=c11 -pthread $(OPENMP)
+LFLAGS   = -pthread $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =
 LIBS     =
