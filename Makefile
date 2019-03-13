@@ -10,6 +10,7 @@ Q         ?= @
 
 #DO NOT EDIT BELOW
 include $(MAKE_DIR)/include_$(TAG).mk
+include $(MAKE_DIR)/config.mk
 INCLUDES  += -I./src/includes
 
 VPATH     = $(SRC_DIR)
@@ -20,7 +21,7 @@ OBJ      += $(patsubst $(SRC_DIR)/%.cc, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*
 OBJ      += $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.cpp))
 OBJ      += $(patsubst $(SRC_DIR)/%.f90, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.f90))
 OBJ      += $(patsubst $(SRC_DIR)/%.F90, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.F90))
-CPPFLAGS := $(CPPFLAGS) $(DEFINES) $(INCLUDES)
+CPPFLAGS := $(CPPFLAGS) $(DEFINES) $(OPTIONS) $(INCLUDES)
 
 
 ${TARGET}: $(BUILD_DIR) $(OBJ)
@@ -63,7 +64,6 @@ $(BUILD_DIR)/%.o:  %.F90
 tags:
 	@echo "===>  GENERATE  TAGS"
 	$(Q)ctags -R
-
 
 $(BUILD_DIR):
 	@mkdir $(BUILD_DIR)

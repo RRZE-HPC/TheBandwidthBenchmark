@@ -35,13 +35,11 @@
 #include <omp.h>
 #endif
 
+#include <timing.h>
 #include <allocate.h>
+#include <affinity.h>
 
-#define ARRAY_ALIGNMENT	64
-#define SIZE	20000000ull
-#define NTIMES	10
-
-# define HLINE "-------------------------------------------------------------\n"
+#define HLINE "----------------------------------------------------------------------------\n"
 
 #ifndef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))
@@ -65,6 +63,12 @@ typedef enum benchmark {
     NUMBENCH
 } benchmark;
 
+typedef struct {
+    char* label;
+    int words;
+    int flops;
+} benchmarkType;
+
 extern double init(double*, double, int);
 extern double sum(double*, int);
 extern double copy(double*, double*, int);
@@ -82,6 +86,7 @@ int main (int argc, char** argv)
     size_t N = SIZE;
     double *a, *b, *c, *d;
     double scalar, tmp;
+    double E, S;
 
     double	avgtime[NUMBENCH],
             maxtime[NUMBENCH],
@@ -89,33 +94,29 @@ int main (int argc, char** argv)
 
     double times[NUMBENCH][NTIMES];
 
-    double	bytes[NUMBENCH] = {
-        1 * sizeof(double) * N, /* init */
-        1 * sizeof(double) * N, /* sum */
-        2 * sizeof(double) * N, /* copy */
-        2 * sizeof(double) * N, /* update */
-        3 * sizeof(double) * N, /* triad */
-        3 * sizeof(double) * N, /* daxpy */
-        4 * sizeof(double) * N, /* striad */
-        4 * sizeof(double) * N  /* sdaxpy */
+    benchmarkType benchmarks[NUMBENCH] = {
+        {"Init:       ", 1, 0},
+        {"Sum:        ", 1, 1},
+        {"Copy:       ", 2, 0},
+        {"Update:     ", 2, 1},
+        {"Triad:      ", 3, 2},
+        {"Daxpy:      ", 3, 2},
+        {"STriad:     ", 4, 2},
+        {"SDaxpy:     ", 4, 2}
     };
-
-    char	*label[NUMBENCH] = {
-        "Init:       ",
-        "Sum:        ",
-        "Copy:       ",
-        "Update:     ",
-        "Triad:      ",
-        "Daxpy:      ",
-        "STriad:     ",
-        "SDaxpy:     "};
 
     a = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     b = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     c = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     d = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
 
+    printf(HLINE);
+    printf ("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
+
     for (int i=0; i<NUMBENCH; i++) {
+#ifdef VERBOSE_DATASIZE
+        printf ("\t%s: %8.2f MB\n", benchmarks[i].label, benchmarks[i].words * bytesPerWord * N * 1.0E-06);
+#endif
         avgtime[i] = 0;
         maxtime[i] = 0;
         mintime[i] = FLT_MAX;
@@ -126,12 +127,18 @@ int main (int argc, char** argv)
 #pragma omp parallel
     {
         int k = omp_get_num_threads();
+        int i = omp_get_thread_num();
 
 #pragma omp single
         printf ("OpenMP enabled, running with %d threads\n", k);
+
+#ifdef VERBOSE_AFFINITY
+        printf ("\tThread %d running on processor %d\n", i, affinity_getProcessorId());
+#endif
     }
 #endif
 
+    S = getTimeStamp();
 #pragma omp parallel for
     for (int i=0; i<N; i++) {
         a[i] = 2.0;
@@ -139,6 +146,11 @@ int main (int argc, char** argv)
         c[i] = 0.5;
         d[i] = 1.0;
     }
+    E = getTimeStamp();
+#ifdef VERBOSE_TIMER
+    printf ("Timer resolution %.2e ", getTimeResolution());
+    printf ("Ticks used %.0e\n", (E-S) / getTimeResolution());
+#endif
 
     scalar = 3.0;
 
@@ -164,15 +176,26 @@ int main (int argc, char** argv)
     }
 
     printf(HLINE);
-    printf("Function      Rate (MB/s)   Avg time     Min time     Max time\n");
+    printf("Function      Rate(MB/s)  Rate(MFlop/s)  Avg time     Min time     Max time\n");
     for (int j=0; j<NUMBENCH; j++) {
         avgtime[j] = avgtime[j]/(double)(NTIMES-1);
+        double bytes = (double) benchmarks[j].words * sizeof(double) * N;
+        double flops = (double) benchmarks[j].flops * sizeof(double) * N;
 
-        printf("%s%11.4f  %11.4f  %11.4f  %11.4f\n", label[j],
-                1.0E-06 * bytes[j]/mintime[j],
-                avgtime[j],
-                mintime[j],
-                maxtime[j]);
+        if (flops > 0){
+            printf("%s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", benchmarks[j].label,
+                    1.0E-06 * bytes/mintime[j],
+                    1.0E-06 * flops/mintime[j],
+                    avgtime[j],
+                    mintime[j],
+                    maxtime[j]);
+        } else {
+            printf("%s%11.2f    -        %11.4f  %11.4f  %11.4f\n", benchmarks[j].label,
+                    1.0E-06 * bytes/mintime[j],
+                    avgtime[j],
+                    mintime[j],
+                    maxtime[j]);
+        }
     }
     printf(HLINE);
 

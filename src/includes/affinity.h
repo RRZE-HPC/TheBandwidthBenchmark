@@ -25,25 +25,12 @@
  * =======================================================================================
  */
 
-#include <timing.h>
+#ifndef AFFINITY_H
+#define AFFINITY_H
 
-double sum(
-        double * restrict a,
-        int N
-        )
-{
-    double S, E;
-    double sum = 0.0;
+extern int affinity_getProcessorId();
+extern void affinity_pinProcess(int);
+extern void affinity_pinThread(int);
 
-    S = getTimeStamp();
-#pragma omp parallel for reduction(+:sum)
-    for (int i=0; i<N; i++) {
-        sum += a[i];
-    }
-    E = getTimeStamp();
+#endif /*AFFINITY_H*/
 
-    /* make the compiler think this makes actually sense */
-    a[10] = sum;
-
-    return E-S;
-}
