@@ -27,7 +27,19 @@ TAG = GCC  # Supported GCC, CLANG, ICC
 OPENMP   = -fopenmp
 ```
 
-3. Build with:
+3. Adjust options set in config.mk:
+```
+OPTIONS  =  -DSIZE=40000000ull
+OPTIONS +=  -DNTIMES=10
+OPTIONS +=  -DARRAY_ALIGNMENT=64
+#OPTIONS +=  -DVERBOSE_AFFINITY
+#OPTIONS +=  -DVERBOSE_DATASIZE
+#OPTIONS +=  -DVERBOSE_TIMER
+```
+
+The verbosity options enable detailed output about affinity settings, allocation sizes and timer resolution.
+
+4. Build with:
 ```
 make
 ```
@@ -39,7 +51,7 @@ To output the executed commands use:
 make Q=
 ```
 
-4. Clean up with:
+5. Clean up with:
 ```
 make clean
 ```
@@ -50,7 +62,7 @@ make distclean
 ```
 to clean intermediate build results and binary.
 
-5. (Optional) Generate assembler:
+6. (Optional) Generate assembler:
 ```
 make asm
 ```
