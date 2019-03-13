@@ -14,7 +14,7 @@ It contains the following streaming kernels with corresponding data access patte
 * striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
 * sdaxpy (L3, S1): Schoenauer triad without write allocate - `a = a + b * c`.
 
-As added benefit the code is a blueprint for a minimal benchmarking application with a generic makefile and modules for aligned array allocation, accurate timing and affinity settings. Those components may be used standalone in your own code project.
+As added benefit the code is a blueprint for a minimal benchmarking application with a generic makefile and modules for aligned array allocation, accurate timing and affinity settings. Those components can be used standalone in your own project.
 
 ## Build
 
