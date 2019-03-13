@@ -1,7 +1,7 @@
 # The Bandwidth Benchmark
 
 This is a collection of simple streaming kernels for teaching purposes.
-It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/.
+It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/ benchmark.
 
 It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate):
 
