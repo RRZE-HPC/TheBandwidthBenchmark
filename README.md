@@ -1,19 +1,20 @@
 # The Bandwidth Benchmark
 
 This is a collection of simple streaming kernels for teaching purposes.
-It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/.
+It is heavily inspired by John McCalpin's https://www.cs.virginia.edu/stream/ benchmark.
 
-It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate):
+It contains the following streaming kernels with corresponding data access pattern (Notation: S - store, L - load, WA - write allocate). All variables are vectors, s is a scalar:
 
-* init (S1, WA): Initilize an array. Store only.
-* sum (L1): Vector reduction. Load only.
-* copy  (L1, S1, WA): Classic memcopy.
-* update (L1, S1): Update a vector. Also load + store but without write allocate.
+* init (S1, WA): Initilize an array: `a = s`. Store only.
+* sum (L1): Vector reduction: `s += a`. Load only.
+* copy  (L1, S1, WA): Classic memcopy: `a = b`.
+* update (L1, S1): Update vector: `a = a * scalar`. Also load + store but without write allocate.
 * triad (L2, S1, WA): Stream triad - `a = b + b * scalar`.
 * daxpy (L2, S1): Daxpy - `a = a + b * scalar`.
 * striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
 * sdaxpy (L3, S1): Schoenauer triad without write allocate - `a = a + b * c`.
 
+As added benefit the code is a blueprint for a minimal benchmarking application with a generic makefile and modules for aligned array allocation, accurate timing and affinity settings. Those components can be used standalone in your own project.
 
 ## Build
 
@@ -27,7 +28,19 @@ TAG = GCC  # Supported GCC, CLANG, ICC
 OPENMP   = -fopenmp
 ```
 
-3. Build with:
+3. Adjust options set in config.mk:
+```
+OPTIONS  =  -DSIZE=40000000ull
+OPTIONS +=  -DNTIMES=10
+OPTIONS +=  -DARRAY_ALIGNMENT=64
+#OPTIONS +=  -DVERBOSE_AFFINITY
+#OPTIONS +=  -DVERBOSE_DATASIZE
+#OPTIONS +=  -DVERBOSE_TIMER
+```
+
+The verbosity options enable detailed output about affinity settings, allocation sizes and timer resolution.
+
+4. Build with:
 ```
 make
 ```
@@ -39,7 +52,7 @@ To output the executed commands use:
 make Q=
 ```
 
-4. Clean up with:
+5. Clean up with:
 ```
 make clean
 ```
@@ -50,7 +63,7 @@ make distclean
 ```
 to clean intermediate build results and binary.
 
-5. (Optional) Generate assembler:
+6. (Optional) Generate assembler:
 ```
 make asm
 ```
