@@ -1,5 +1,3 @@
-# Supported: GCC, CLANG, ICC
-TAG ?= GCC
 
 #CONFIGURE BUILD SYSTEM
 TARGET	   = bwbench-$(TAG)
@@ -9,8 +7,8 @@ MAKE_DIR   = ./
 Q         ?= @
 
 #DO NOT EDIT BELOW
-include $(MAKE_DIR)/include_$(TAG).mk
 include $(MAKE_DIR)/config.mk
+include $(MAKE_DIR)/include_$(TAG).mk
 INCLUDES  += -I./src/includes
 
 VPATH     = $(SRC_DIR)

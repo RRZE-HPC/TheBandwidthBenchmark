@@ -1,9 +1,12 @@
 CC  = icc
 LINKER = $(CC)
 
-OPENMP   = #-qopenmp
-CFLAGS   = -Ofast -xhost -std=c11 -pthread $(OPENMP)
+ifeq ($(ENABLE_OPENMP),true)
+OPENMP   = -qopenmp
+endif
+
+CFLAGS   = -Ofast -xhost -std=c99 -pthread $(OPENMP)
 LFLAGS   = -pthread $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =
-LIBS     = -lpthread
+LIBS     =

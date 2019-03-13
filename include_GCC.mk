@@ -1,9 +1,12 @@
 CC  = gcc
 LINKER = $(CC)
 
-OPENMP   = # -fopenmp
-CFLAGS   = -Ofast -std=c11 -pthread $(OPENMP)
+ifeq ($(ENABLE_OPENMP),true)
+OPENMP   = -fopenmp
+endif
+
+CFLAGS   = -Ofast -std=c99 -pthread $(OPENMP)
 LFLAGS   = -pthread $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =
-LIBS     = -lpthread
+LIBS     =
