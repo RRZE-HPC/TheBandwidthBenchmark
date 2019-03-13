@@ -25,13 +25,14 @@
  * =======================================================================================
  */
 
+#ifdef __linux__
 #include <stdlib.h>
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/syscall.h>
 #include <pthread.h>
+#include <sys/syscall.h>
 
 #define MAX_NUM_THREADS 128
 #define gettid() syscall(SYS_gettid)
@@ -83,3 +84,4 @@ affinity_pinProcess(int processorId)
     CPU_SET(processorId, &cpuset);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
 }
+#endif
