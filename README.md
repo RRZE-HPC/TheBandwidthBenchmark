@@ -9,10 +9,10 @@ It contains the following streaming kernels with corresponding data access patte
 * sum (L1): Vector reduction: `s += a`. Load only.
 * copy  (L1, S1, WA): Classic memcopy: `a = b`.
 * update (L1, S1): Update vector: `a = a * scalar`. Also load + store but without write allocate.
-* triad (L2, S1, WA): Stream triad - `a = b + c * scalar`.
-* daxpy (L2, S1): Daxpy - `a = a + b * scalar`.
-* striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
-* sdaxpy (L3, S1): Schoenauer triad without write allocate - `a = a + b * c`.
+* triad (L2, S1, WA): Stream triad: `a = b + c * scalar`.
+* daxpy (L2, S1): Daxpy: `a = a + b * scalar`.
+* striad (L3, S1, WA): Schoenauer triad: `a = b + c * d`.
+* sdaxpy (L3, S1): Schoenauer triad without write allocate: `a = a + b * c`.
 
 As added benefit the code is a blueprint for a minimal benchmarking application with a generic makefile and modules for aligned array allocation, accurate timing and affinity settings. Those components can be used standalone in your own project.
 
