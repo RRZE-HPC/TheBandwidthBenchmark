@@ -9,7 +9,7 @@ It contains the following streaming kernels with corresponding data access patte
 * sum (L1): Vector reduction: `s += a`. Load only.
 * copy  (L1, S1, WA): Classic memcopy: `a = b`.
 * update (L1, S1): Update vector: `a = a * scalar`. Also load + store but without write allocate.
-* triad (L2, S1, WA): Stream triad - `a = b + b * scalar`.
+* triad (L2, S1, WA): Stream triad - `a = b + c * scalar`.
 * daxpy (L2, S1): Daxpy - `a = a + b * scalar`.
 * striad (L3, S1, WA): Schoenauer triad - `a = b + c * d`.
 * sdaxpy (L3, S1): Schoenauer triad without write allocate - `a = a + b * c`.
@@ -89,16 +89,16 @@ Example output for threaded execution:
         threadid 140271455102720 -> core 2 - OK
         threadid 140271446710016 -> core 3 - OK
 OpenMP enabled, running with 4 threads
--------------------------------------------------------------
-Function      Rate (MB/s)   Avg time     Min time     Max time
-Init:        14681.5000       0.0110       0.0109       0.0111
-Sum:         20634.9290       0.0079       0.0078       0.0082
-Copy:        18822.2827       0.0172       0.0170       0.0176
-Update:      28135.9717       0.0115       0.0114       0.0117
-Triad:       19263.0634       0.0253       0.0249       0.0268
-Daxpy:       26718.1377       0.0182       0.0180       0.0187
-STriad:      21229.4470       0.0305       0.0301       0.0313
-SDaxpy:      26714.3897       0.0243       0.0240       0.0253
--------------------------------------------------------------
+----------------------------------------------------------------------------
+Function      Rate(MB/s)  Rate(MFlop/s)  Avg time     Min time     Max time
+Init:          22111.53    -             0.0148       0.0145       0.0165
+Sum:           46808.59    46808.59      0.0077       0.0068       0.0140
+Copy:          30983.06    -             0.0207       0.0207       0.0208
+Update:        43778.69    21889.34      0.0147       0.0146       0.0148
+Triad:         34476.64    22984.43      0.0282       0.0278       0.0305
+Daxpy:         45908.82    30605.88      0.0214       0.0209       0.0242
+STriad:        37502.37    18751.18      0.0349       0.0341       0.0388
+SDaxpy:        46822.63    23411.32      0.0281       0.0273       0.0325
+----------------------------------------------------------------------------
 Solution Validates
 ```
