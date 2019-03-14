@@ -111,7 +111,15 @@ int main (int argc, char** argv)
 
 #ifdef LIKWID
     LIKWID_MARKER_INIT;
+#ifdef _OPENMP
+#pragma omp parallel
+{
+#endif
     LIKWID_MARKER_REGISTER("INIT");
+    LIKWID_MARKER_REGISTER("COPY");
+#ifdef _OPENMP
+}
+#endif
 #endif
 
     a = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
