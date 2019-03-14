@@ -26,6 +26,9 @@
  */
 
 #include <timing.h>
+#ifdef LIKWID
+#include <likwid.h>
+#endif
 
 double init(
         double * restrict a,
@@ -36,10 +39,20 @@ double init(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel
+{
+#ifdef LIKWID
+    LIKWID_MARKER_START("INIT");
+#endif
+#pragma omp for
+#pragma vector nontemporal
     for (int i=0; i<N; i++) {
         a[i] = scalar;
     }
+#ifdef LIKWID
+    LIKWID_MARKER_STOP("INIT");
+#endif
+}
     E = getTimeStamp();
 
     return E-S;

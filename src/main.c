@@ -39,6 +39,10 @@
 #include <allocate.h>
 #include <affinity.h>
 
+#ifdef LIKWID
+#include <likwid.h>
+#endif
+
 #define HLINE "----------------------------------------------------------------------------\n"
 
 #ifndef MIN
@@ -104,6 +108,11 @@ int main (int argc, char** argv)
         {"STriad:     ", 4, 2},
         {"SDaxpy:     ", 4, 2}
     };
+
+#ifdef LIKWID
+    LIKWID_MARKER_INIT;
+    LIKWID_MARKER_REGISTER("INIT");
+#endif
 
     a = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     b = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
@@ -200,6 +209,10 @@ int main (int argc, char** argv)
     printf(HLINE);
 
     check(a, b, c, d, N);
+
+#ifdef LIKWID
+    LIKWID_MARKER_CLOSE;
+#endif
 
     return EXIT_SUCCESS;
 }
