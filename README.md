@@ -20,8 +20,9 @@ As added benefit the code is a blueprint for a minimal benchmarking application 
 
 1. Configure the toolchain and additional options in `config.mk`:
 ```
-TAG = GCC  # Supported GCC, CLANG, ICC
-ENABLE_OPENMP = false
+# Supported: GCC, CLANG, ICC
+TAG ?= GCC
+ENABLE_OPENMP ?= false
 
 OPTIONS  =  -DSIZE=40000000ull
 OPTIONS +=  -DNTIMES=10
