@@ -9,6 +9,7 @@ Q         ?= @
 #DO NOT EDIT BELOW
 include $(MAKE_DIR)/config.mk
 include $(MAKE_DIR)/include_$(TAG).mk
+include $(MAKE_DIR)/include_LIKWID.mk
 INCLUDES  += -I./src/includes
 
 VPATH     = $(SRC_DIR)
