@@ -1,6 +1,6 @@
 # Supported: GCC, CLANG, ICC
 TAG ?= GCC
-ENABLE_OPENMP = false
+ENABLE_OPENMP ?= false
 
 #Feature options
 OPTIONS  =  -DSIZE=40000000ull
