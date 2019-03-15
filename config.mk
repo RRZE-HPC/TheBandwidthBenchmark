@@ -1,5 +1,5 @@
 # Supported: GCC, CLANG, ICC
-TAG ?= GCC
+TAG ?= ICC
 ENABLE_OPENMP ?= false
 ENABLE_LIKWID ?= false
 

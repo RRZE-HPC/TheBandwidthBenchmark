@@ -26,6 +26,7 @@
  */
 
 #include <timing.h>
+#include <likwid_markers.h>
 
 double update(
         double * restrict a,
@@ -36,10 +37,15 @@ double update(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel
+{
+    LIKWID_MARKER_START("UPDATE");
+#pragma omp for
     for (int i=0; i<N; i++) {
         a[i] = a[i] * scalar;
     }
+    LIKWID_MARKER_STOP("UPDATE");
+}
     E = getTimeStamp();
 
     return E-S;
