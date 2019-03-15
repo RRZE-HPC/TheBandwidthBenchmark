@@ -41,7 +41,6 @@ double init(
 {
     LIKWID_MARKER_START("INIT");
 #pragma omp for
-#pragma vector nontemporal
     for (int i=0; i<N; i++) {
         a[i] = scalar;
     }

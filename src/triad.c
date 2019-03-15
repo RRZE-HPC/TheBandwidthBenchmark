@@ -46,9 +46,9 @@ double triad(
         for (int i=0; i<N; i++) {
             a[i] = b[i] + scalar * c[i];
         }
-        E = getTimeStamp();
         LIKWID_MARKER_STOP("TRIAD");
     }
+    E = getTimeStamp();
 
     return E-S;
 }
