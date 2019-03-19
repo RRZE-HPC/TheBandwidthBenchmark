@@ -26,7 +26,6 @@
  */
 
 #include <timing.h>
-#include <likwid_markers.h>
 
 double triad(
         double * restrict a,
@@ -39,14 +38,9 @@ double triad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("TRIAD");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = b[i] + scalar * c[i];
-        }
-        LIKWID_MARKER_STOP("TRIAD");
+#pragma omp parallel for
+    for (int i=0; i<N; i++) {
+        a[i] = b[i] + scalar * c[i];
     }
     E = getTimeStamp();
 

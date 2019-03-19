@@ -38,7 +38,6 @@
 #include <timing.h>
 #include <allocate.h>
 #include <affinity.h>
-#include <likwid_markers.h>
 
 #define HLINE "----------------------------------------------------------------------------\n"
 
@@ -105,17 +104,6 @@ int main (int argc, char** argv)
         {"STriad:     ", 4, 2},
         {"SDaxpy:     ", 4, 2}
     };
-
-    LIKWID_MARKER_INIT;
-#ifdef _OPENMP
-#pragma omp parallel
-{
-#endif
-    LIKWID_MARKER_REGISTER("INIT");
-    LIKWID_MARKER_REGISTER("COPY");
-#ifdef _OPENMP
-}
-#endif
 
     a = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     b = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
@@ -212,7 +200,6 @@ int main (int argc, char** argv)
     printf(HLINE);
 
     check(a, b, c, d, N);
-    LIKWID_MARKER_CLOSE;
 
     return EXIT_SUCCESS;
 }

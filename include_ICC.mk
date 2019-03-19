@@ -5,7 +5,7 @@ ifeq ($(ENABLE_OPENMP),true)
 OPENMP   = -qopenmp
 endif
 
-CFLAGS   = -Ofast -xHost -std=c99 -ffreestanding $(OPENMP)
+CFLAGS   = -qopt-report -Ofast -xHost -std=c99 -ffreestanding $(OPENMP)
 LFLAGS   = $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =
