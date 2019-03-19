@@ -26,6 +26,7 @@
  */
 
 #include <timing.h>
+#include <likwid_markers.h>
 
 double copy(
         double * restrict a,
@@ -36,10 +37,15 @@ double copy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for 
+#pragma omp parallel
+{
+    LIKWID_MARKER_START("COPY");
+#pragma omp for
     for (int i=0; i<N; i++) {
         a[i] = b[i];
     }
+    LIKWID_MARKER_STOP("COPY");
+}
     E = getTimeStamp();
 
     return E-S;

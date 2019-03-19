@@ -25,28 +25,20 @@
  * =======================================================================================
  */
 
-#include <timing.h>
-#include <likwid_markers.h>
+#ifndef LIKWID_MARKERS_H
+#define LIKWID_MARKERS_H
 
-double update(
-        double * restrict a,
-        double scalar,
-        int N
-        )
-{
-    double S, E;
+#ifdef LIKWID_PERFMON
+#include <likwid.h>
+#else
+#define LIKWID_MARKER_INIT
+#define LIKWID_MARKER_THREADINIT
+#define LIKWID_MARKER_SWITCH
+#define LIKWID_MARKER_REGISTER(regionTag)
+#define LIKWID_MARKER_START(regionTag)
+#define LIKWID_MARKER_STOP(regionTag)
+#define LIKWID_MARKER_CLOSE
+#define LIKWID_MARKER_GET(regionTag, nevents, events, time, count)
+#endif
 
-    S = getTimeStamp();
-#pragma omp parallel
-{
-    LIKWID_MARKER_START("UPDATE");
-#pragma omp for
-    for (int i=0; i<N; i++) {
-        a[i] = a[i] * scalar;
-    }
-    LIKWID_MARKER_STOP("UPDATE");
-}
-    E = getTimeStamp();
-
-    return E-S;
-}
+#endif /*LIKWID_MARKERS_H*/
