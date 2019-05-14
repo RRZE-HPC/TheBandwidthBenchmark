@@ -103,7 +103,7 @@ SDaxpy:        46822.63    23411.32      0.0281       0.0273       0.0325
 Solution Validates
 ```
 
-A perl wrapper script (bench.pl) is also provided to scan certain range of thread counts and determine the absolute highest sustained main memory bandwidth. In order to use it `likwid-pin` has to be in your path. The script has three required and one optional command line arguments:
+A perl wrapper script (bench.pl) is also provided to scan ranges of thread counts and determine the absolute highest sustained main memory bandwidth. In order to use it `likwid-pin` has to be in your path. The script has three required and one optional command line arguments:
 ```
 $./bench.pl <executable> <thread count range>  <repititions> [<SMT setting>] 
 ```
