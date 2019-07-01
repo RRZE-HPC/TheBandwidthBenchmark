@@ -180,7 +180,7 @@ int main (int argc, char** argv)
     for (int j=0; j<NUMBENCH; j++) {
         avgtime[j] = avgtime[j]/(double)(NTIMES-1);
         double bytes = (double) benchmarks[j].words * sizeof(double) * N;
-        double flops = (double) benchmarks[j].flops * sizeof(double) * N;
+        double flops = (double) benchmarks[j].flops *  N;
 
         if (flops > 0){
             printf("%s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", benchmarks[j].label,
