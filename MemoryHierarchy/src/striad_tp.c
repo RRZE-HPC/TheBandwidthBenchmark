@@ -43,7 +43,7 @@ double striad_tp(
 
 #pragma omp parallel
     {
-        double* al = (double*) allocate( ARRAY_ALIGNMENT, N * sizeof(double) );
+        double* al = (double*) allocate( ARRAY_ALIGNMENT, N * sizeof(double));
 
 #pragma omp single
         S = getTimeStamp();

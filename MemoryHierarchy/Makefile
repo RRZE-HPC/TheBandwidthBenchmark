@@ -1,6 +1,6 @@
 #CONFIGURE TOOL CHAIN
 CC  = gcc
-OPENMP   =# -fopenmp
+OPENMP   = -fopenmp
 #CFLAGS   = -O3 -xHost -qopt-zmm-usage=high -std=c99 $(OPENMP)
 CFLAGS   = -O3 -std=c99 $(OPENMP)
 LFLAGS   = $(OPENMP)
