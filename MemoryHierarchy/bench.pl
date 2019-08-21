@@ -22,7 +22,7 @@ if ( $ARGV[1] eq 'seq' ){
     $type = 2;
 }
 
-
+print("# striad $numCores $SMT $ARGV[1]\n");
 while ( $N < 8000000 ) {
     my $result;
     my $performance = '0.00';

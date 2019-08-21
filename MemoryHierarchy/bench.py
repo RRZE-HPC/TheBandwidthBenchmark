@@ -52,12 +52,14 @@ else:
     sys.exit(1)
 smt = int(sys.argv[3]) if len(sys.argv) == 4 else default_smt
 
+print("# striad {} {} {}".format(numcores, smt, striad_type))
+
 N = start_N
 while N < max_N:
     performance = 0
     result = None
     runcmd = "likwid-pin -c E:S0:{}:1:{} -q ./striad {} {}".format(numcores, smt,
-                                                                striad_t, N)
+                                                                   striad_t, N)
     while performance == 0:
         p = subprocess.Popen(runcmd, stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
@@ -72,4 +74,5 @@ while N < max_N:
             print("Execution failed: {}".format(runcmd))
             break
     print(result)
+    sys.stdout.flush()
     N = int(N * scale_N)
