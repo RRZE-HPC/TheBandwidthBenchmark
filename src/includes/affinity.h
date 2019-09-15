@@ -1,7 +1,7 @@
 /*
  * =======================================================================================
  *
- *      Author:   Jan Eitzinger (je), jan.treibig@gmail.com
+ *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
  *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,4 +33,3 @@ extern void affinity_pinProcess(int);
 extern void affinity_pinThread(int);
 
 #endif /*AFFINITY_H*/
-
