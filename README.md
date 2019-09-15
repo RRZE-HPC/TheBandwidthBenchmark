@@ -1,6 +1,6 @@
 # The Bandwidth Benchmark
 
-This is a collection of simple streaming kernels for teaching purposes.
+This is a collection of simple streaming kernels.
 
 Apart from the micro-benchmark functionality this is also a blueprint for other micro-benchmark applications.
 
