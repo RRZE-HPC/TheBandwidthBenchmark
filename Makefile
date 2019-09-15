@@ -1,4 +1,3 @@
-
 #CONFIGURE BUILD SYSTEM
 TARGET	   = bwbench-$(TAG)
 BUILD_DIR  = ./$(TAG)
@@ -30,12 +29,12 @@ asm:  $(BUILD_DIR) $(ASM)
 
 $(BUILD_DIR)/%.o:  %.c
 	@echo "===>  COMPILE  $@"
-	$(Q)$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 	$(Q)$(CC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.s:  %.c
 	@echo "===>  GENERATE ASM  $@"
-	$(Q)$(CC) -S $(CPPFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -S $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.s:  %.f90
 	@echo "===>  COMPILE  $@"
