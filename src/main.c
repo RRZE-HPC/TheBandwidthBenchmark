@@ -38,6 +38,7 @@
 #include <timing.h>
 #include <allocate.h>
 #include <affinity.h>
+#include <likwid_markers.h>
 
 #define HLINE "----------------------------------------------------------------------------\n"
 
@@ -89,8 +90,8 @@ int main (int argc, char** argv)
     double E, S;
 
     double	avgtime[NUMBENCH],
-            maxtime[NUMBENCH],
-            mintime[NUMBENCH];
+    maxtime[NUMBENCH],
+    mintime[NUMBENCH];
 
     double times[NUMBENCH][NTIMES];
 
@@ -104,6 +105,19 @@ int main (int argc, char** argv)
         {"STriad:     ", 4, 2},
         {"SDaxpy:     ", 4, 2}
     };
+
+    LIKWID_MARKER_INIT;
+#pragma omp parallel
+    {
+        LIKWID_MARKER_REGISTER("INIT");
+        LIKWID_MARKER_REGISTER("SUM");
+        LIKWID_MARKER_REGISTER("COPY");
+        LIKWID_MARKER_REGISTER("UPDATE");
+        LIKWID_MARKER_REGISTER("TRIAD");
+        LIKWID_MARKER_REGISTER("DAXPY");
+        LIKWID_MARKER_REGISTER("STRIAD");
+        LIKWID_MARKER_REGISTER("SDAXPY");
+    }
 
     a = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
     b = (double*) allocate( ARRAY_ALIGNMENT, N * bytesPerWord );
@@ -200,6 +214,7 @@ int main (int argc, char** argv)
     printf(HLINE);
 
     check(a, b, c, d, N);
+    LIKWID_MARKER_CLOSE;
 
     return EXIT_SUCCESS;
 }

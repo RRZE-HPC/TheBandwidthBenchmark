@@ -53,7 +53,6 @@ getProcessorID(cpu_set_t* cpu_set)
     return processorId;
 }
 
-
 int
 affinity_getProcessorId()
 {
@@ -85,5 +84,5 @@ affinity_pinProcess(int processorId)
     CPU_SET(processorId, &cpuset);
     sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
 }
-#endif /*__linux__*/
 #endif /*_OPENMP*/
+#endif /*__linux__*/

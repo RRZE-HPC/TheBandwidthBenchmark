@@ -8,6 +8,7 @@ Q         ?= @
 #DO NOT EDIT BELOW
 include $(MAKE_DIR)/config.mk
 include $(MAKE_DIR)/include_$(TAG).mk
+include $(MAKE_DIR)/include_LIKWID.mk
 INCLUDES  += -I./src/includes
 
 VPATH     = $(SRC_DIR)
@@ -30,7 +31,7 @@ asm:  $(BUILD_DIR) $(ASM)
 $(BUILD_DIR)/%.o:  %.c
 	@echo "===>  COMPILE  $@"
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
-	$(Q)$(CC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
+	$(Q)$(GCC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.s:  %.c
 	@echo "===>  GENERATE ASM  $@"

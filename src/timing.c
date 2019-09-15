@@ -46,4 +46,3 @@ double getTimeStamp_()
 {
     return getTimeStamp();
 }
-

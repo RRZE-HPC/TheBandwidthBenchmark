@@ -25,31 +25,20 @@
  * =======================================================================================
  */
 
-#include <timing.h>
-#include <likwid_markers.h>
+#ifndef LIKWID_MARKERS_H
+#define LIKWID_MARKERS_H
 
-double sum(
-        double * restrict a,
-        int N
-        )
-{
-    double S, E;
-    double sum = 0.0;
+#ifdef LIKWID_PERFMON
+#include <likwid.h>
+#else
+#define LIKWID_MARKER_INIT
+#define LIKWID_MARKER_THREADINIT
+#define LIKWID_MARKER_SWITCH
+#define LIKWID_MARKER_REGISTER(regionTag)
+#define LIKWID_MARKER_START(regionTag)
+#define LIKWID_MARKER_STOP(regionTag)
+#define LIKWID_MARKER_CLOSE
+#define LIKWID_MARKER_GET(regionTag, nevents, events, time, count)
+#endif
 
-    S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("SUM");
-#pragma omp for reduction(+:sum)
-        for (int i=0; i<N; i++) {
-            sum += a[i];
-        }
-        LIKWID_MARKER_STOP("SUM");
-    }
-    E = getTimeStamp();
-
-    /* make the compiler think this makes actually sense */
-    a[10] = sum;
-
-    return E-S;
-}
+#endif /*LIKWID_MARKERS_H*/

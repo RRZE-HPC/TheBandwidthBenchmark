@@ -1,4 +1,5 @@
-CC  = gcc
+CC   = gcc
+GCC  = gcc
 LINKER = $(CC)
 
 ifeq ($(ENABLE_OPENMP),true)

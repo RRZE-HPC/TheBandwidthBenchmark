@@ -26,6 +26,7 @@
  */
 
 #include <timing.h>
+#include <likwid_markers.h>
 
 double sdaxpy(
         double * restrict a,
@@ -37,9 +38,14 @@ double sdaxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = a[i] + b[i] * c[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("SDAXPY");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = a[i] + b[i] * c[i];
+        }
+        LIKWID_MARKER_STOP("SDAXPY");
     }
     E = getTimeStamp();
 
