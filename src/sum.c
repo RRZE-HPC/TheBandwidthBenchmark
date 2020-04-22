@@ -26,7 +26,7 @@
  */
 
 #include <timing.h>
-#include <likwid_markers.h>
+#include <likwid-marker.h>
 
 double sum(
         double * restrict a,

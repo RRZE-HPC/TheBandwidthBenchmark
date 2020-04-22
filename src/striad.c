@@ -26,7 +26,7 @@
  */
 
 #include <timing.h>
-#include <likwid_markers.h>
+#include <likwid-marker.h>
 
 double striad(
         double * restrict a,

@@ -38,7 +38,7 @@
 #include <timing.h>
 #include <allocate.h>
 #include <affinity.h>
-#include <likwid_markers.h>
+#include <likwid-marker.h>
 
 #define HLINE "----------------------------------------------------------------------------\n"
 
