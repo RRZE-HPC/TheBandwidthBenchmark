@@ -116,18 +116,3 @@ SDaxpy:        46822.63    23411.32      0.0281       0.0273       0.0325
 Solution Validates
 ```
 
-## Benchmarking skript
-
-A perl wrapper script (bench.pl) is also provided to scan ranges of thread counts and determine the absolute highest sustained main memory bandwidth. In order to use it `likwid-pin` has to be in your path. The script has three required and one optional command line arguments:
-```
-$./bench.pl <executable> <thread count range>  <repetitions> [<SMT setting>]
-```
-Example usage:
-```
-$./bench.pl ./bwbench-GCC 2-8 6
-```
-The script will always use physical cores only, where two SMT threads is the default. For different SMT thread counts use the 4th command line argument. Example for a processor without SMT:
-```
-$./bench.pl ./bwbench-GCC 14-24  10  1
-```
-
