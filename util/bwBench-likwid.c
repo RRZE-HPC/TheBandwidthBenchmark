@@ -36,6 +36,8 @@
 #include <omp.h>
 #endif
 
+#include <likwid-marker.h>
+
 #define SIZE 40000000ull
 #define NTIMES 10
 #define ARRAY_ALIGNMENT 64
@@ -87,8 +89,8 @@ int main (int argc, char** argv)
     double E, S;
 
     double	avgtime[NUMBENCH],
-            maxtime[NUMBENCH],
-            mintime[NUMBENCH];
+    maxtime[NUMBENCH],
+    mintime[NUMBENCH];
 
     double times[NUMBENCH][NTIMES];
 
@@ -101,6 +103,18 @@ int main (int argc, char** argv)
         {"STriad:     ", 4, 2},
         {"SDaxpy:     ", 4, 2}
     };
+
+    LIKWID_MARKER_INIT;
+#pragma omp parallel
+    {
+        LIKWID_MARKER_REGISTER("INIT");
+        LIKWID_MARKER_REGISTER("COPY");
+        LIKWID_MARKER_REGISTER("UPDATE");
+        LIKWID_MARKER_REGISTER("TRIAD");
+        LIKWID_MARKER_REGISTER("DAXPY");
+        LIKWID_MARKER_REGISTER("STRIAD");
+        LIKWID_MARKER_REGISTER("SDAXPY");
+    }
 
     posix_memalign((void**) &a, ARRAY_ALIGNMENT, N * bytesPerWord );
     posix_memalign((void**) &b, ARRAY_ALIGNMENT, N * bytesPerWord );
@@ -177,6 +191,7 @@ int main (int argc, char** argv)
     }
     printf(HLINE);
     check(a, b, c, d, N);
+    LIKWID_MARKER_CLOSE;
 
     return EXIT_SUCCESS;
 }
@@ -275,9 +290,14 @@ double init(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = scalar;
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("INIT");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = scalar;
+        }
+        LIKWID_MARKER_STOP("INIT");
     }
     E = getTimeStamp();
 
@@ -293,9 +313,14 @@ double copy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = b[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("COPY");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = b[i];
+        }
+        LIKWID_MARKER_STOP("COPY");
     }
     E = getTimeStamp();
 
@@ -311,9 +336,14 @@ double update(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = a[i] * scalar;
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("UPDATE");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = a[i] * scalar;
+        }
+        LIKWID_MARKER_STOP("UPDATE");
     }
     E = getTimeStamp();
 
@@ -331,9 +361,14 @@ double triad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = b[i] + scalar * c[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("TRIAD");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = b[i] + scalar * c[i];
+        }
+        LIKWID_MARKER_STOP("TRIAD");
     }
     E = getTimeStamp();
 
@@ -350,9 +385,14 @@ double daxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = a[i] + scalar * b[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("DAXPY");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = a[i] + scalar * b[i];
+        }
+        LIKWID_MARKER_STOP("DAXPY");
     }
     E = getTimeStamp();
 
@@ -370,9 +410,14 @@ double striad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = b[i] + d[i] * c[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("STRIAD");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = b[i] + d[i] * c[i];
+        }
+        LIKWID_MARKER_STOP("STRIAD");
     }
     E = getTimeStamp();
 
@@ -389,9 +434,14 @@ double sdaxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
-    for (int i=0; i<N; i++) {
-        a[i] = a[i] + b[i] * c[i];
+#pragma omp parallel
+    {
+        LIKWID_MARKER_START("SDAXPY");
+#pragma omp for
+        for (int i=0; i<N; i++) {
+            a[i] = a[i] + b[i] * c[i];
+        }
+        LIKWID_MARKER_STOP("SDAXPY");
     }
     E = getTimeStamp();
 
