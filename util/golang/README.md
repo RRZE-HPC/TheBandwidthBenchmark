@@ -5,4 +5,5 @@
 # Run
 
 Choose nt option to set number of threads used.
+
 `go run bwBench.go -nt 4`
