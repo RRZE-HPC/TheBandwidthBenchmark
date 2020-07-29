@@ -153,7 +153,7 @@ int main (int argc, char** argv)
 #endif
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = 2.0;
         b[i] = 2.0;

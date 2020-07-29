@@ -42,7 +42,7 @@ double triad(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("TRIAD");
-#pragma omp for
+#pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = b[i] + scalar * c[i];
         }

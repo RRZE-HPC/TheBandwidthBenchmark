@@ -40,7 +40,7 @@ double update(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("UPDATE");
-#pragma omp for
+#pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = a[i] * scalar;
         }

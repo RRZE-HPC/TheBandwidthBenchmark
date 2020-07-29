@@ -41,7 +41,7 @@ double sdaxpy(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("SDAXPY");
-#pragma omp for
+#pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = a[i] + b[i] * c[i];
         }

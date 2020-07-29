@@ -40,7 +40,7 @@ double sum(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("SUM");
-#pragma omp for reduction(+:sum)
+#pragma omp for reduction(+:sum) schedule(static)
         for (int i=0; i<N; i++) {
             sum += a[i];
         }

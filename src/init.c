@@ -40,7 +40,7 @@ double init(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("INIT");
-#pragma omp for
+#pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = scalar;
         }

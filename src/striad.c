@@ -42,7 +42,7 @@ double striad(
 #pragma omp parallel
     {
         LIKWID_MARKER_START("STRIAD");
-#pragma omp for
+#pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = b[i] + d[i] * c[i];
         }
