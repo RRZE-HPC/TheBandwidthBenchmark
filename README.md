@@ -37,7 +37,7 @@ TAG ?= GCC
 ENABLE_OPENMP ?= false
 ENABLE_LIKWID ?= false
 
-OPTIONS  =  -DSIZE=40000000ull
+OPTIONS  =  -DSIZE=120000000ull
 OPTIONS +=  -DNTIMES=10
 OPTIONS +=  -DARRAY_ALIGNMENT=64
 #OPTIONS +=  -DVERBOSE_AFFINITY
@@ -46,6 +46,8 @@ OPTIONS +=  -DARRAY_ALIGNMENT=64
 ```
 
 The verbosity options enable detailed output about affinity settings, allocation sizes and timer resolution.
+
+*Notice:* OpenMP involves significant overhead through barrier cost, especially on systems with many memory domains. The default problem size is set to almost 4GB to have enough work vs overhead. If you suspect that the result should be better you may try to further increase the problem size. To compare to original stream results on X86 systems you have to ensure that streaming store instructions are used. For the ICC toolchain this is now the default (Option `-qopt-streaming-stores=always`. 
 
 2. Build with:
 ```
