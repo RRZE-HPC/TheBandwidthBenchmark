@@ -54,20 +54,21 @@
 
 #define LIKWID_PROFILE(tag,call) \
     _Pragma ("omp parallel") \
-    {LIKWID_MARKER_START("tag");} \
-    times[tag][k]  = call; \
+    {LIKWID_MARKER_START(#tag);} \
+    times[tag##T][k]  = call; \
     _Pragma ("omp parallel") \
-    {LIKWID_MARKER_STOP("tag");}
+    {LIKWID_MARKER_STOP(#tag);}
+
 
 typedef enum benchmark {
-    INIT = 0,
-    SUM,
-    COPY,
-    UPDATE,
-    TRIAD,
-    DAXPY,
-    STRIAD,
-    SDAXPY,
+    INITT = 0,
+    SUMT,
+    COPYT,
+    UPDATET,
+    TRIADT,
+    DAXPYT,
+    STRIADT,
+    SDAXPYT,
     NUMBENCH
 } benchmark;
 
@@ -114,7 +115,7 @@ int main (int argc, char** argv)
     };
 
     LIKWID_MARKER_INIT;
-#pragma omp parallel
+_Pragma("omp parallel")
     {
         LIKWID_MARKER_REGISTER("INIT");
         LIKWID_MARKER_REGISTER("SUM");
@@ -145,7 +146,7 @@ int main (int argc, char** argv)
 
 #ifdef _OPENMP
     printf(HLINE);
-#pragma omp parallel
+_Pragma("omp parallel")
     {
         int k = omp_get_num_threads();
         int i = omp_get_thread_num();
