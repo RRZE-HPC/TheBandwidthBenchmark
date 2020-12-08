@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
  */
 
 #include <timing.h>
-#include <likwid-marker.h>
 
 double sdaxpy(
         double * restrict a,
@@ -38,14 +37,9 @@ double sdaxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("SDAXPY");
-#pragma omp for schedule(static)
-        for (int i=0; i<N; i++) {
-            a[i] = a[i] + b[i] * c[i];
-        }
-        LIKWID_MARKER_STOP("SDAXPY");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = a[i] + b[i] * c[i];
     }
     E = getTimeStamp();
 

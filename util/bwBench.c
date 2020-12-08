@@ -25,6 +25,7 @@
  * =======================================================================================
  */
 
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -36,8 +37,8 @@
 #include <omp.h>
 #endif
 
-#define SIZE 40000000ull
-#define NTIMES 10
+#define SIZE 120000000ull
+#define NTIMES 5
 #define ARRAY_ALIGNMENT 64
 #define HLINE "----------------------------------------------------------------------------\n"
 

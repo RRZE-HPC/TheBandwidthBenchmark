@@ -52,6 +52,13 @@
 #define ABS(a) ((a) >= 0 ? (a) : -(a))
 #endif
 
+#define LIKWID_PROFILE(tag,call) \
+    _Pragma ("omp parallel") \
+    {LIKWID_MARKER_START("tag");} \
+    times[tag][k]  = call; \
+    _Pragma ("omp parallel") \
+    {LIKWID_MARKER_STOP("tag");}
+
 typedef enum benchmark {
     INIT = 0,
     SUM,
@@ -169,16 +176,16 @@ int main (int argc, char** argv)
     scalar = 3.0;
 
     for ( int k=0; k < NTIMES; k++) {
-        times[INIT][k]   = init(b, scalar, N);
+        LIKWID_PROFILE(INIT,init(b, scalar, N));
         tmp = a[10];
-        times[SUM][k]    = sum(a, N);
+        LIKWID_PROFILE(SUM,sum(a, N));
         a[10] = tmp;
-        times[COPY][k]   = copy(c, a, N);
-        times[UPDATE][k] = update(a, scalar, N);
-        times[TRIAD][k]  = triad(a, b, c, scalar, N);
-        times[DAXPY][k]  = daxpy(a, b, scalar, N);
-        times[STRIAD][k] = striad(a, b, c, d, N);
-        times[SDAXPY][k] = sdaxpy(a, b, c, N);
+        LIKWID_PROFILE(COPY,copy(c, a, N));
+        LIKWID_PROFILE(UPDATE,update(a, scalar, N));
+        LIKWID_PROFILE(TRIAD,triad(a, b, c, scalar, N));
+        LIKWID_PROFILE(DAXPY,daxpy(a, b, scalar, N));
+        LIKWID_PROFILE(STRIAD,striad(a, b, c, d, N));
+        LIKWID_PROFILE(SDAXPY,sdaxpy(a, b, c, N));
     }
 
     for (int j=0; j<NUMBENCH; j++) {

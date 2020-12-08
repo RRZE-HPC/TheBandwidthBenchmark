@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,6 @@
  */
 
 #include <timing.h>
-#include <likwid-marker.h>
 
 double sum(
         double * restrict a,
@@ -37,14 +36,9 @@ double sum(
     double sum = 0.0;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("SUM");
-#pragma omp for reduction(+:sum) schedule(static)
-        for (int i=0; i<N; i++) {
-            sum += a[i];
-        }
-        LIKWID_MARKER_STOP("SUM");
+#pragma omp parallel for reduction(+:sum) schedule(static)
+    for (int i=0; i<N; i++) {
+        sum += a[i];
     }
     E = getTimeStamp();
 

@@ -38,8 +38,8 @@
 
 #include <likwid-marker.h>
 
-#define SIZE 40000000ull
-#define NTIMES 10
+#define SIZE 120000000ull
+#define NTIMES 5
 #define ARRAY_ALIGNMENT 64
 #define HLINE "----------------------------------------------------------------------------\n"
 
