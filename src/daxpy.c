@@ -40,12 +40,10 @@ double daxpy(
     S = getTimeStamp();
 #pragma omp parallel
     {
-        LIKWID_MARKER_START("DAXPY");
 #pragma omp for schedule(static)
         for (int i=0; i<N; i++) {
             a[i] = a[i] + scalar * b[i];
         }
-        LIKWID_MARKER_STOP("DAXPY");
     }
     E = getTimeStamp();
 
