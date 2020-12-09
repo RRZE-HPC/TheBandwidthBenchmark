@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -126,7 +126,7 @@ int main (int argc, char** argv)
     }
 #endif
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = 2.0;
         b[i] = 2.0;
@@ -276,7 +276,7 @@ double init(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = scalar;
     }
@@ -294,7 +294,7 @@ double copy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = b[i];
     }
@@ -312,7 +312,7 @@ double update(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = a[i] * scalar;
     }
@@ -332,7 +332,7 @@ double triad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = b[i] + scalar * c[i];
     }
@@ -351,7 +351,7 @@ double daxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = a[i] + scalar * b[i];
     }
@@ -371,7 +371,7 @@ double striad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = b[i] + d[i] * c[i];
     }
@@ -390,7 +390,7 @@ double sdaxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = a[i] + b[i] * c[i];
     }

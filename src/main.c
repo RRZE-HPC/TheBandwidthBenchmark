@@ -54,11 +54,10 @@
 
 #define LIKWID_PROFILE(tag,call) \
     _Pragma ("omp parallel") \
-{LIKWID_MARKER_START(#tag);} \
-times[tag][k]  = call; \
-_Pragma ("omp parallel") \
-{LIKWID_MARKER_STOP(#tag);}
-
+   {LIKWID_MARKER_START(#tag);} \
+   times[tag][k]  = call; \
+   _Pragma ("omp parallel") \
+   {LIKWID_MARKER_STOP(#tag);}
 
 typedef enum benchmark {
     INIT = 0,
@@ -177,7 +176,6 @@ int main (int argc, char** argv)
     scalar = 3.0;
 
     for ( int k=0; k < NTIMES; k++) {
-
         LIKWID_PROFILE(INIT,init(b, scalar, N));
         tmp = a[10];
         LIKWID_PROFILE(SUM,sum(a, N));
