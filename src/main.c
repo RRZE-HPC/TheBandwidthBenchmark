@@ -55,20 +55,20 @@
 #define LIKWID_PROFILE(tag,call) \
     _Pragma ("omp parallel") \
     {LIKWID_MARKER_START(#tag);} \
-    times[tag##T][k]  = call; \
+    times[tag][k]  = call; \
     _Pragma ("omp parallel") \
     {LIKWID_MARKER_STOP(#tag);}
 
 
 typedef enum benchmark {
-    INITT = 0,
-    SUMT,
-    COPYT,
-    UPDATET,
-    TRIADT,
-    DAXPYT,
-    STRIADT,
-    SDAXPYT,
+    INIT = 0,
+    SUM,
+    COPY,
+    UPDATE,
+    TRIAD,
+    DAXPY,
+    STRIAD,
+    SDAXPY,
     NUMBENCH
 } benchmark;
 
@@ -177,10 +177,13 @@ _Pragma("omp parallel")
     scalar = 3.0;
 
     for ( int k=0; k < NTIMES; k++) {
+
         LIKWID_PROFILE(INIT,init(b, scalar, N));
         tmp = a[10];
+
         LIKWID_PROFILE(SUM,sum(a, N));
         a[10] = tmp;
+
         LIKWID_PROFILE(COPY,copy(c, a, N));
         LIKWID_PROFILE(UPDATE,update(a, scalar, N));
         LIKWID_PROFILE(TRIAD,triad(a, b, c, scalar, N));
