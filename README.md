@@ -120,17 +120,17 @@ Solution Validates
 
 ## Scaling runs
 
-Apart from the highest sustained memory bandwidth often also the scaling behavior within memory domains is a important system property.
+Apart from the highest sustained memory bandwidth also the scaling behavior within memory domains is a important system property.
 
 There is a helper script included in util (```extractResults.pl```) that creates a text result file from multiple runs that can be used as input to plotting applications as gnuplot and xmgrace.
-This involves two steps: Executing the benchmark runs and then creating the data file.
+This involves two steps: Executing the benchmark runs and creating the data file.
 
 To run the benchmark for different thread counts within a memory domain execute (this assumes bash or zsh):
 ```
 $ for nt in 1 2 4 6 8 10; do likwid-pin -q -C E:M0:$nt:1:2 ./bwbench-ICC > dat/emmy-$nt.txt; done
 ```
 
-It is recommended to just use one thread per core in case the processor support hyperthreading.
+It is recommended to just use one thread per core in case the processor supports hyperthreading.
 Use whatever stepping you like, here a stepping of two was used.
 The ```-q``` option suppresses output from ```likwid-pin```.
 Above line uses the expression based syntax, on systems with hyperthreading enabled (check with, e.g., ```likwid-topology```) you have to skip the other hardware threads on each core.
