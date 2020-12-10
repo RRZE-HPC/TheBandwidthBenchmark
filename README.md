@@ -88,9 +88,9 @@ To run the benchmark call:
 The benchmark will output the results similar to the stream benchmark. Results are validated.
 For threaded execution it is recommended to control thread affinity.
 
-We recommend to use likwid-pin for benchmarking:
+We recommend to use likwid-pin for setting the number of threads used and to control thread affinity:
 ```
-likwid-pin -c 0-3 ./bwbench-GCC
+likwid-pin -C 0-3 ./bwbench-GCC
 ```
 
 Example output for threaded execution:
@@ -118,3 +118,42 @@ SDaxpy:        46822.63    23411.32      0.0281       0.0273       0.0325
 Solution Validates
 ```
 
+## Scaling runs
+
+Apart from the highest sustained memory bandwidth often also the scaling behavior within memory domains is a important system property.
+
+There is a helper script included in util (```extractResults.pl```) that creates a text result file from multiple runs that can be used as input to plotting applications as gnuplot and xmgrace.
+This involves two steps: Executing the benchmark runs and then creating the data file.
+
+To run the benchmark for different thread counts within a memory domain execute (this assumes bash or zsh):
+```
+$ for nt in 1 2 4 6 8 10; do likwid-pin -q -C E:M0:$nt:1:2 ./bwbench-ICC > dat/emmy-$nt.txt; done
+```
+
+It is recommended to just use one thread per core in case the processor support hyperthreading.
+Use whatever stepping you like, here a stepping of two was used.
+The ```-q``` option suppresses output from ```likwid-pin```.
+Above line uses the expression based syntax, on systems with hyperthreading enabled (check with, e.g., ```likwid-topology```) you have to skip the other hardware threads on each core.
+For above system with 2 hardware threads per core this results in ```-C E:M0:$nt:1:2```, on a system with 4 hardware threads per core you would need ```-C E:M0:$nt:1:4```.
+The string before the dash (here emmy) can be arbitrary, but the after the dash the extraction script expects the thread count.
+Also the file ending has to be ```.txt```.
+Please check with a text editor on some result files if everything worked fine.
+
+To extract the results and output in a plotable format execute:
+```
+./extractResults.pl ./dat
+```
+
+The script will pick up all result files in the directory specified and create a column format output file.
+In this case:
+```
+#nt	Init	Sum	Copy	Update	Triad	Daxpy	STriad	SDaxpy
+1	4109	11900	5637	8025	7407	9874	8981	11288
+2	8057	22696	11011	15174	14821	18786	17599	21475
+4	15602	39327	21020	28197	27287	33633	31939	37146
+6	22592	45877	29618	37155	36664	40259	39911	41546
+8	28641	46878	35763	40111	40106	41293	41022	41950
+10	33151	46741	38187	40269	39960	40922	40567	41606
+```
+
+Please be aware the the single core memory bandwidth as well as the scaling behavior depends on the frequency settings.
