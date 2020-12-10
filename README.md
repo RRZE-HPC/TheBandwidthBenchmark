@@ -135,11 +135,11 @@ Use whatever stepping you like, here a stepping of two was used.
 The ```-q``` option suppresses output from ```likwid-pin```.
 Above line uses the expression based syntax, on systems with hyperthreading enabled (check with, e.g., ```likwid-topology```) you have to skip the other hardware threads on each core.
 For above system with 2 hardware threads per core this results in ```-C E:M0:$nt:1:2```, on a system with 4 hardware threads per core you would need ```-C E:M0:$nt:1:4```.
-The string before the dash (here emmy) can be arbitrary, but the after the dash the extraction script expects the thread count.
+The string before the dash (here emmy) can be arbitrary, but the the extraction script expects the thread count after the dash.
 Also the file ending has to be ```.txt```.
-Please check with a text editor on some result files if everything worked fine.
+Please check with a text editor on some result files if everything worked as expected.
 
-To extract the results and output in a plotable format execute:
+To extract the results and output in a plottable format execute:
 ```
 ./extractResults.pl ./dat
 ```
