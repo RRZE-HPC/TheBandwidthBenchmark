@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
  *
  * =======================================================================================
  */
-
 #ifdef __linux__
 #ifdef _OPENMP
 #include <stdlib.h>
@@ -38,8 +37,7 @@
 #define MAX_NUM_THREADS 128
 #define gettid() syscall(SYS_gettid)
 
-static int
-getProcessorID(cpu_set_t* cpu_set)
+static int getProcessorID(cpu_set_t* cpu_set)
 {
     int processorId;
 
@@ -53,8 +51,7 @@ getProcessorID(cpu_set_t* cpu_set)
     return processorId;
 }
 
-int
-affinity_getProcessorId()
+int affinity_getProcessorId()
 {
     cpu_set_t  cpu_set;
     CPU_ZERO(&cpu_set);
@@ -63,8 +60,7 @@ affinity_getProcessorId()
     return getProcessorID(&cpu_set);
 }
 
-void
-affinity_pinThread(int processorId)
+void affinity_pinThread(int processorId)
 {
     cpu_set_t cpuset;
     pthread_t thread;
@@ -75,8 +71,7 @@ affinity_pinThread(int processorId)
     pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
 }
 
-void
-affinity_pinProcess(int processorId)
+void affinity_pinProcess(int processorId)
 {
     cpu_set_t cpuset;
 
