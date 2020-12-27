@@ -4,7 +4,9 @@ bwBench.c contains a single file version of The Bandwidth Benchmark that is tail
 
 It should compile with any C99 compiler.
 
-# Benchmarking skript
+# Benchmarking skripts
+
+## bench.pl to determine the absolute highest main memory bandwidth
 
 A wrapper scripts in perl (bench.pl) and python (bench.py) are also provided to scan ranges of thread counts and determine the absolute highest sustained main memory bandwidth. In order to use it `likwid-pin` has to be in your path. The script has three required and one optional command line arguments:
 ```
@@ -18,3 +20,7 @@ The script will always use physical cores only, where two SMT threads is the def
 ```
 $./bench.pl ./bwbench-GCC 14-24  10  1
 ```
+
+## extractResults.pl to generate a plottable output files from multiple scaling runs
+
+Please see how to use it in the toplevel [README](https://github.com/RRZE-HPC/TheBandwidthBenchmark#scaling-runs).
