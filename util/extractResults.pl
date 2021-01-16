@@ -27,7 +27,20 @@ use strict;
 use warnings;
 use utf8;
 
-my $DIR = $ARGV[0];
+my ($DIR, $UNIT) = @ARGV;
+
+if (not defined $DIR) {
+  die "Need directory: $0 <DIR>\n";
+}
+
+if (not defined $UNIT) {
+    $UNIT = 1.0;
+} else {
+    if ( $UNIT eq 'GB' ) {
+        $UNIT = 0.001;
+    }
+}
+
 my %RES;
 
 my @testcases = ('Init', 'Sum', 'Copy', 'Update', 'Triad',  'Daxpy', 'STriad', 'SDaxpy');
@@ -49,7 +62,7 @@ while( defined( my $file = glob($DIR . '/*' ) ) ) {
 
             if ( $fields[1] =~ /[0-9]+/ ) {
                 $fields[0] =~ s/://;
-                $RES{$nt}->{$fields[0]} = $fields[1];
+                $RES{$nt}->{$fields[0]} = $fields[1] * $UNIT;
             }
         }
 
@@ -68,7 +81,11 @@ foreach my $key (sort {$a <=> $b} keys %RES) {
     printf "%d", $key;
 
     foreach my $test ( @testcases ) {
-        printf "\t%.0f", $RES{$key}->{$test};
+        if ( $UNIT > 0.1 ) {
+            printf "\t%.0f", $RES{$key}->{$test};
+        } else {
+            printf "\t%.2f", $RES{$key}->{$test};
+        }
     }
     printf "\n";
 }
