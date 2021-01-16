@@ -31,7 +31,7 @@ Please see how to use it in the toplevel [README](https://github.com/RRZE-HPC/Th
 
 The script is designed to be used from the root of TheBandwidthBenchmark.
 This script cleans and builds the currently configured toolchain. It expects that all Likwid tools are in the path!
-Desired Frequency settings must be already in place.
+Desired frequency settings must be already in place.
 
 Usage:
 ```
