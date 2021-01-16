@@ -10,6 +10,7 @@ It contains C modules for:
 * Accurate timing
 
 Moreover the benchmark showcases a simple generic Makefile that can be used in other projects.
+You may want to have a look at our [[Result wiki|https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki]] that was created using TheBandwidthBenchmark.
 
 ## Overview
 
