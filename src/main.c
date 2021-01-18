@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
  *
  * =======================================================================================
  */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -54,11 +53,10 @@
 
 #define LIKWID_PROFILE(tag,call) \
     _Pragma ("omp parallel") \
-    {LIKWID_MARKER_START(#tag);} \
-    times[tag][k]  = call; \
-    _Pragma ("omp parallel") \
-    {LIKWID_MARKER_STOP(#tag);}
-
+   {LIKWID_MARKER_START(#tag);} \
+   times[tag][k]  = call; \
+   _Pragma ("omp parallel") \
+   {LIKWID_MARKER_STOP(#tag);}
 
 typedef enum benchmark {
     INIT = 0,
@@ -115,7 +113,7 @@ int main (int argc, char** argv)
     };
 
     LIKWID_MARKER_INIT;
-_Pragma("omp parallel")
+    _Pragma("omp parallel")
     {
         LIKWID_MARKER_REGISTER("INIT");
         LIKWID_MARKER_REGISTER("SUM");
@@ -146,7 +144,7 @@ _Pragma("omp parallel")
 
 #ifdef _OPENMP
     printf(HLINE);
-_Pragma("omp parallel")
+    _Pragma("omp parallel")
     {
         int k = omp_get_num_threads();
         int i = omp_get_thread_num();
@@ -177,13 +175,10 @@ _Pragma("omp parallel")
     scalar = 3.0;
 
     for ( int k=0; k < NTIMES; k++) {
-
         LIKWID_PROFILE(INIT,init(b, scalar, N));
         tmp = a[10];
-
         LIKWID_PROFILE(SUM,sum(a, N));
         a[10] = tmp;
-
         LIKWID_PROFILE(COPY,copy(c, a, N));
         LIKWID_PROFILE(UPDATE,update(a, scalar, N));
         LIKWID_PROFILE(TRIAD,triad(a, b, c, scalar, N));

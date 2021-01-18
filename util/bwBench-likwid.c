@@ -2,7 +2,7 @@
  * =======================================================================================
  *
  *      Author:   Jan Eitzinger (je), jan.eitzinger@fau.de
- *      Copyright (c) 2019 RRZE, University Erlangen-Nuremberg
+ *      Copyright (c) 2020 RRZE, University Erlangen-Nuremberg
  *
  *      Permission is hereby granted, free of charge, to any person obtaining a copy
  *      of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
  *
  * =======================================================================================
  */
-
+#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -52,6 +52,13 @@
 #ifndef ABS
 #define ABS(a) ((a) >= 0 ? (a) : -(a))
 #endif
+
+#define LIKWID_PROFILE(tag,call) \
+    _Pragma ("omp parallel") \
+   {LIKWID_MARKER_START(#tag);} \
+   times[tag][k]  = call; \
+   _Pragma ("omp parallel") \
+   {LIKWID_MARKER_STOP(#tag);}
 
 typedef enum benchmark {
     INIT = 0,
@@ -89,8 +96,8 @@ int main (int argc, char** argv)
     double E, S;
 
     double	avgtime[NUMBENCH],
-    maxtime[NUMBENCH],
-    mintime[NUMBENCH];
+            maxtime[NUMBENCH],
+            mintime[NUMBENCH];
 
     double times[NUMBENCH][NTIMES];
 
@@ -139,7 +146,7 @@ int main (int argc, char** argv)
     }
 #endif
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(static)
     for (int i=0; i<N; i++) {
         a[i] = 2.0;
         b[i] = 2.0;
@@ -150,13 +157,13 @@ int main (int argc, char** argv)
     scalar = 3.0;
 
     for ( int k=0; k < NTIMES; k++) {
-        times[INIT][k]   = init(b, scalar, N);
-        times[COPY][k]   = copy(c, a, N);
-        times[UPDATE][k] = update(a, scalar, N);
-        times[TRIAD][k]  = triad(a, b, c, scalar, N);
-        times[DAXPY][k]  = daxpy(a, b, scalar, N);
-        times[STRIAD][k] = striad(a, b, c, d, N);
-        times[SDAXPY][k] = sdaxpy(a, b, c, N);
+        LIKWID_PROFILE(INIT,init(b, scalar, N));
+        LIKWID_PROFILE(COPY,copy(c, a, N));
+        LIKWID_PROFILE(UPDATE,update(a, scalar, N));
+        LIKWID_PROFILE(TRIAD,triad(a, b, c, scalar, N));
+        LIKWID_PROFILE(DAXPY,daxpy(a, b, scalar, N));
+        LIKWID_PROFILE(STRIAD,striad(a, b, c, d, N));
+        LIKWID_PROFILE(SDAXPY,sdaxpy(a, b, c, N));
     }
 
     for (int j=0; j<NUMBENCH; j++) {
@@ -290,14 +297,9 @@ double init(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("INIT");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = scalar;
-        }
-        LIKWID_MARKER_STOP("INIT");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = scalar;
     }
     E = getTimeStamp();
 
@@ -313,14 +315,9 @@ double copy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("COPY");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = b[i];
-        }
-        LIKWID_MARKER_STOP("COPY");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = b[i];
     }
     E = getTimeStamp();
 
@@ -336,14 +333,9 @@ double update(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("UPDATE");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = a[i] * scalar;
-        }
-        LIKWID_MARKER_STOP("UPDATE");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = a[i] * scalar;
     }
     E = getTimeStamp();
 
@@ -361,14 +353,9 @@ double triad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("TRIAD");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = b[i] + scalar * c[i];
-        }
-        LIKWID_MARKER_STOP("TRIAD");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = b[i] + scalar * c[i];
     }
     E = getTimeStamp();
 
@@ -385,14 +372,9 @@ double daxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("DAXPY");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = a[i] + scalar * b[i];
-        }
-        LIKWID_MARKER_STOP("DAXPY");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = a[i] + scalar * b[i];
     }
     E = getTimeStamp();
 
@@ -410,14 +392,9 @@ double striad(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("STRIAD");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = b[i] + d[i] * c[i];
-        }
-        LIKWID_MARKER_STOP("STRIAD");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = b[i] + d[i] * c[i];
     }
     E = getTimeStamp();
 
@@ -434,14 +411,9 @@ double sdaxpy(
     double S, E;
 
     S = getTimeStamp();
-#pragma omp parallel
-    {
-        LIKWID_MARKER_START("SDAXPY");
-#pragma omp for
-        for (int i=0; i<N; i++) {
-            a[i] = a[i] + b[i] * c[i];
-        }
-        LIKWID_MARKER_STOP("SDAXPY");
+#pragma omp parallel for schedule(static)
+    for (int i=0; i<N; i++) {
+        a[i] = a[i] + b[i] * c[i];
     }
     E = getTimeStamp();
 

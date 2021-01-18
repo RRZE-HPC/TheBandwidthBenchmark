@@ -3,7 +3,8 @@ GCC  = gcc
 LINKER = $(CC)
 
 ifeq ($(ENABLE_OPENMP),true)
-OPENMP   = -fopenmp
+OPENMP   = -Xpreprocessor -fopenmp
+LIBS     = -lomp
 endif
 
 VERSION  = --version
@@ -12,4 +13,3 @@ CFLAGS   = -Ofast -std=c99 $(OPENMP)
 LFLAGS   = $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =
-LIBS     =

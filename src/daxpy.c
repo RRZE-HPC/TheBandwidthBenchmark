@@ -24,7 +24,6 @@
  *
  * =======================================================================================
  */
-
 #include <timing.h>
 
 double daxpy(
@@ -38,9 +37,9 @@ double daxpy(
 
     S = getTimeStamp();
 #pragma omp parallel for schedule(static)
-        for (int i=0; i<N; i++) {
-            a[i] = a[i] + scalar * b[i];
-        }
+    for (int i=0; i<N; i++) {
+        a[i] = a[i] + scalar * b[i];
+    }
     E = getTimeStamp();
 
     return E-S;
