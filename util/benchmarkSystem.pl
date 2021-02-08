@@ -60,13 +60,6 @@ my $SMT;
 `likwid-topology -g > $DIR/topology.txt`;
 my $topo = `likwid-topology -O`;
 
-#my $topo = do {
-#    local $/ = undef;
-#    open my $fh, "<", './topo.txt'
-#        or die "could not open tile: $!";
-#    <$fh>;
-#};
-
 foreach my $ln (split("\n", $topo)) {
     if ( $ln =~ /^CPU name:/ ) {
         my @fields = split(",", $ln);
