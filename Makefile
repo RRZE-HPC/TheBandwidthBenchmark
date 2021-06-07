@@ -63,51 +63,53 @@ $(BUILD_DIR)/%.o:  %.c
 	$(Q)$(GCC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.s:  %.c
-	@echo "===>  GENERATE ASM  $@"
+	$(info ===>  GENERATE ASM  $@)
 	$(CC) -S $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.s:  %.f90
-	@echo "===>  COMPILE  $@"
+	$(info ===>  GENERATE ASM  $@)
 	$(Q)$(FC) -S  $(FCFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.o:  %.cc
-	@echo "===>  COMPILE  $@"
+	$(info ===>  COMPILE  $@)
 	$(Q)$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 	$(Q)$(CXX) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.o:  %.cpp
-	@echo "===>  COMPILE  $@"
+	$(info ===>  COMPILE  $@)
 	$(Q)$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $< -o $@
 	$(Q)$(CXX) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.o:  %.f90
-	@echo "===>  COMPILE  $@"
+	$(info ===>  COMPILE  $@)
 	$(Q)$(FC) -c  $(FCFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.o:  %.F90
-	@echo "===>  COMPILE  $@"
+	$(info ===>  COMPILE  $@)
 	$(Q)$(FC) -c  $(CPPFLAGS)  $(FCFLAGS) $< -o $@
 
+.PHONY: clean distclean tags info asm
+
+clean:
+	$(info ===>  CLEAN)
+	@rm -rf $(BUILD_DIR)
+	@rm -f tags
+
+distclean: clean
+	$(info ===>  DIST CLEAN)
+	@rm -f $(TARGET)
+
+info:
+	$(info $(CFLAGS))
+	$(Q)$(CC) $(VERSION)
+
+asm:  $(BUILD_DIR) $(ASM)
+
 tags:
-	@echo "===>  GENERATE  TAGS"
+	$(info ===>  GENERATE TAGS)
 	$(Q)ctags -R
 
 $(BUILD_DIR):
 	@mkdir $(BUILD_DIR)
 
-ifeq ($(findstring $(MAKECMDGOALS),clean),)
 -include $(OBJ:.o=.d)
-endif
-
-.PHONY: clean distclean
-
-clean:
-	@echo "===>  CLEAN"
-	@rm -rf $(BUILD_DIR)
-	@rm -f tags
-
-distclean: clean
-	@echo "===>  DIST CLEAN"
-	@rm -f $(TARGET)
-	@rm -f tags
-
