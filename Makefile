@@ -53,10 +53,6 @@ ${TARGET}: $(BUILD_DIR) $(OBJ)
 
 asm:  $(BUILD_DIR) $(ASM)
 
-info:
-	@echo $(CFLAGS)
-	$(Q)$(CC) $(VERSION)
-
 $(BUILD_DIR)/%.o:  %.c
 	@echo "===>  COMPILE  $@"
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
