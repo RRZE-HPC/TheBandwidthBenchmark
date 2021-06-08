@@ -34,7 +34,7 @@ Q         ?= @
 include $(MAKE_DIR)/config.mk
 include $(MAKE_DIR)/include_$(TAG).mk
 include $(MAKE_DIR)/include_LIKWID.mk
-INCLUDES  += -I./src/includes
+INCLUDES  += -I$(SRC_DIR)/includes -I$(BUILD_DIR)
 
 VPATH     = $(SRC_DIR)
 ASM       = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.s,$(wildcard $(SRC_DIR)/*.c))
@@ -48,13 +48,11 @@ CPPFLAGS := $(CPPFLAGS) $(DEFINES) $(OPTIONS) $(INCLUDES)
 
 
 ${TARGET}: $(BUILD_DIR) $(OBJ)
-	@echo "===>  LINKING  $(TARGET)"
+	$(info ===>  LINKING  $(TARGET))
 	$(Q)${LINKER} ${LFLAGS} -o $(TARGET) $(OBJ) $(LIBS)
 
-asm:  $(BUILD_DIR) $(ASM)
-
-$(BUILD_DIR)/%.o:  %.c
-	@echo "===>  COMPILE  $@"
+$(BUILD_DIR)/%.o:  %.c $(MAKE_DIR)/include_$(TAG).mk
+	$(info ===>  COMPILE  $@)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 	$(Q)$(GCC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
 
@@ -109,3 +107,6 @@ $(BUILD_DIR):
 	@mkdir $(BUILD_DIR)
 
 -include $(OBJ:.o=.d)
+
+# Add explicit dependencies for Fortran90 modules
+#include $(MAKE_DIR)/dep.mk
