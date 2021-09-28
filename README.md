@@ -11,7 +11,7 @@ It contains C modules for:
 
 Moreover the benchmark showcases a simple generic Makefile that can be used in other projects.
 
-You may want to have a look at our [[wiki|https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki]] for a collection of results that were created using TheBandwidthBenchmark.
+You may want to have a look at https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki for a collection of results that were created using TheBandwidthBenchmark.
 
 ## Overview
 
@@ -124,7 +124,7 @@ Solution Validates
 
 Apart from the highest sustained memory bandwidth also the scaling behavior within memory domains is a important system property.
 
-There is a helper script included in util (```extractResults.pl```) that creates a text result file from multiple runs that can be used as input to plotting applications as gnuplot and xmgrace.
+There is a helper script downloadable at https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki/util/extractResults.pl that creates a text result file from multiple runs that can be used as input to plotting applications as gnuplot and xmgrace.
 This involves two steps: Executing the benchmark runs and creating the data file.
 
 To run the benchmark for different thread counts within a memory domain execute (this assumes bash or zsh):
