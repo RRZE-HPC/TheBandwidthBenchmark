@@ -11,7 +11,7 @@ It contains C modules for:
 
 Moreover the benchmark showcases a simple generic Makefile that can be used in other projects.
 
-You may want to have a look at our [https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki](Wiki) for a collection of results that were created using TheBandwidthBenchmark.
+You may want to have a look at our [[wiki|https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki]] for a collection of results that were created using TheBandwidthBenchmark.
 
 ## Overview
 
