@@ -1,4 +1,4 @@
-# Supported: GCC, CLANG, ICC
+# Supported: GCC, CLANG, ICC, ICX
 TAG ?= ICC
 ENABLE_OPENMP ?= true
 ENABLE_LIKWID ?= false

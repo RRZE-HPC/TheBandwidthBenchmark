@@ -34,7 +34,7 @@ As added benefit the code is a blueprint for a minimal benchmarking application 
 
 1. Configure the toolchain and additional options in `config.mk`:
 ```
-# Supported: GCC, CLANG, ICC
+# Supported: GCC, CLANG, ICC, ICX
 TAG ?= GCC
 ENABLE_OPENMP ?= false
 ENABLE_LIKWID ?= false
@@ -49,7 +49,7 @@ OPTIONS +=  -DARRAY_ALIGNMENT=64
 
 The verbosity options enable detailed output about affinity settings, allocation sizes and timer resolution.
 
-*Notice:* OpenMP involves significant overhead through barrier cost, especially on systems with many memory domains. The default problem size is set to almost 4GB to have enough work vs overhead. If you suspect that the result should be better you may try to further increase the problem size. To compare to original stream results on X86 systems you have to ensure that streaming store instructions are used. For the ICC toolchain this is now the default (Option `-qopt-streaming-stores=always`). 
+*Notice:* OpenMP involves significant overhead through barrier cost, especially on systems with many memory domains. The default problem size is set to almost 4GB to have enough work vs overhead. If you suspect that the result should be better you may try to further increase the problem size. To compare to original stream results on X86 systems you have to ensure that streaming store instructions are used. For the ICC toolchain this is now the default (Option `-qopt-streaming-stores=always`).
 
 2. Build with:
 ```
@@ -149,13 +149,13 @@ To extract the results and output in a plottable format execute:
 The script will pick up all result files in the directory specified and create a column format output file.
 In this case:
 ```
-#nt	Init	Sum	Copy	Update	Triad	Daxpy	STriad	SDaxpy
-1	4109	11900	5637	8025	7407	9874	8981	11288
-2	8057	22696	11011	15174	14821	18786	17599	21475
-4	15602	39327	21020	28197	27287	33633	31939	37146
-6	22592	45877	29618	37155	36664	40259	39911	41546
-8	28641	46878	35763	40111	40106	41293	41022	41950
-10	33151	46741	38187	40269	39960	40922	40567	41606
+#nt     Init    Sum     Copy    Update  Triad   Daxpy   STriad  SDaxpy
+1       4109    11900   5637    8025    7407    9874    8981    11288
+2       8057    22696   11011   15174   14821   18786   17599   21475
+4       15602   39327   21020   28197   27287   33633   31939   37146
+6       22592   45877   29618   37155   36664   40259   39911   41546
+8       28641   46878   35763   40111   40106   41293   41022   41950
+10      33151   46741   38187   40269   39960   40922   40567   41606
 ```
 
 Please be aware the the single core memory bandwidth as well as the scaling behavior depends on the frequency settings.
