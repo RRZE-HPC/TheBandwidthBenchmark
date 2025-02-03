@@ -6,14 +6,20 @@
 #define __UTIL_H_
 
 #define HLINE                                                                  \
-"--------------------------------------------------------------------------------\n"
+  "--------------------------------------------------------------------------" \
+  "------\n"
 
-#define BANNER \
-"_|                            _|_|_|                                  _|        \n" \
-"_|_|_|    _|      _|      _|  _|    _|    _|_|    _|_|_|      _|_|_|  _|_|_|    \n" \
-"_|    _|  _|      _|      _|  _|_|_|    _|_|_|_|  _|    _|  _|        _|    _|  \n" \
-"_|    _|    _|  _|  _|  _|    _|    _|  _|        _|    _|  _|        _|    _|  \n" \
-"_|_|_|        _|      _|      _|_|_|      _|_|_|  _|    _|    _|_|_|  _|    _|  \n"
+#define BANNER                                                                 \
+  "_|                            _|_|_|                                  _|  " \
+  "      \n"                                                                   \
+  "_|_|_|    _|      _|      _|  _|    _|    _|_|    _|_|_|      _|_|_|  "     \
+  "_|_|_|    \n"                                                               \
+  "_|    _|  _|      _|      _|  _|_|_|    _|_|_|_|  _|    _|  _|        _|  " \
+  "  _|  \n"                                                                   \
+  "_|    _|    _|  _|  _|  _|    _|    _|  _|        _|    _|  _|        _|  " \
+  "  _|  \n"                                                                   \
+  "_|_|_|        _|      _|      _|_|_|      _|_|_|  _|    _|    _|_|_|  _|  " \
+  "  _|  \n"
 
 #ifndef MIN
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
@@ -28,22 +34,5 @@
 #endif
 
 #define DEBUG_MESSAGE debug_printf
-
-#ifndef MAXLINE
-#define MAXLINE 4096
-#endif
-
-// #define CG_UINT unsigned long long int
-#define CG_UINT int
-
-#if PRECISION == 1
-#define CG_FLOAT         float
-#define MPI_FLOAT_TYPE   MPI_FLOAT
-#define PRECISION_STRING "single"
-#else
-#define CG_FLOAT         double
-#define MPI_FLOAT_TYPE   MPI_DOUBLE
-#define PRECISION_STRING "double"
-#endif
 
 #endif
