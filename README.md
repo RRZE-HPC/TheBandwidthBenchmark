@@ -73,7 +73,7 @@ stream results on X86 systems you have to ensure that streaming store
 instructions are used. For the ICC tool chain this is now the default (Option
 `-qopt-streaming-stores=always`).
 
-1. Build with:
+- Build with:
 
 ```sh
 make
@@ -83,7 +83,7 @@ You can build multiple tool chains in the same directory, but notice that the
 Makefile is only acting on the one currently set. Intermediate build results are
 located in the `./build/<TOOLCHAIN>` directory.
 
-1. Clean up intermediate build results for active tool chain with:
+- Clean up intermediate build results for active tool chain with:
 
 ```sh
 make clean
@@ -95,7 +95,7 @@ Clean all build results for all tool chains:
 make distclean
 ```
 
-1. Optional targets:
+- Optional targets:
 
 Generate assembler:
 
