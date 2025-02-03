@@ -1,3 +1,7 @@
+bwbench-*
+/build
+.clangd
+
 # Prerequisites
 *.d
 

@@ -1,6 +1,5 @@
 CC   = gcc
-GCC  = gcc
-LINKER = $(CC)
+LD = $(CC)
 
 ifeq ($(ENABLE_OPENMP),true)
 OPENMP   = -fopenmp

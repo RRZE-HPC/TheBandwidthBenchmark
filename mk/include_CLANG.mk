@@ -1,10 +1,8 @@
 CC   = clang
-GCC  = gcc
-LINKER = $(CC)
+LD = $(CC)
 
 ifeq ($(ENABLE_OPENMP),true)
-OPENMP   = -Xpreprocessor -fopenmp
-LIBS     = -lomp
+OPENMP   = -fopenmp
 endif
 
 VERSION  = --version
