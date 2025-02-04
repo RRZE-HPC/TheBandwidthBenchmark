@@ -41,20 +41,22 @@ void profilerInit(void)
     LIKWID_MARKER_REGISTER("STRIAD");
     LIKWID_MARKER_REGISTER("SDAXPY");
   }
-
-#ifdef VERBOSE_DATASIZE
-  for (int i = 0; i < NUMREGIONS; i++) {
-    printf("\t%s: %8.2f MB\n",
-        benchmarks[i].label,
-        benchmarks[i].words * bytesPerWord * N * 1.0E-06);
-  }
-#endif
 }
 
 void profilerPrint(size_t N)
 {
   double avgtime[NUMREGIONS], maxtime[NUMREGIONS], mintime[NUMREGIONS];
   size_t bytesPerWord = sizeof(double);
+
+#ifdef VERBOSE_DATASIZE
+  printf(HLINE);
+  printf("Dataset sizes\n");
+  for (int i = 0; i < NUMREGIONS; i++) {
+    printf("%s: %8.2f MB\n",
+        _regions[i].label,
+        _regions[i].words * bytesPerWord * N * 1.0E-06);
+  }
+#endif
 
   for (int j = 0; j < NUMREGIONS; j++) {
     avgtime[j] = 0;
