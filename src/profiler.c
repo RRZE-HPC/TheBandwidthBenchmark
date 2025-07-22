@@ -119,12 +119,13 @@ void profilerPrint(size_t N) {
     double flops = (double)_regions[j].flops * N;
 
     if (flops > 0) {
-      printf("%s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", _regions[j].label,
+      printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", _regions[j].label,
              1.0E-06 * bytes / mintime, 1.0E-06 * flops / mintime, avgtime,
              mintime, maxtime);
     } else {
-      printf("%s%11.2f    -        %11.4f  %11.4f  %11.4f\n", _regions[j].label,
-             1.0E-06 * bytes / mintime, avgtime, mintime, maxtime);
+      printf("%-12s%11.2f      -      %11.4f  %11.4f  %11.4f\n",
+             _regions[j].label, 1.0E-06 * bytes / mintime, avgtime, mintime,
+             maxtime);
     }
   }
   printf(HLINE);
