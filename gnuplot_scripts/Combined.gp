@@ -21,6 +21,7 @@ set pointsize 2
 # Plot the data
 plot './dat/Init.dat' using 1:3 with linespoints title "Init" pointtype 7 lw 6, \
     './dat/Copy.dat' using 1:3 with linespoints title "Copy" pointtype 7 lw 6, \
+    './dat/Sum.dat' using 1:3 with linespoints title "Sum" pointtype 7 lw 6, \
     './dat/Update.dat' using 1:3 with linespoints title "Update" pointtype 7 lw 6, \
     './dat/Triad.dat' using 1:3 with linespoints title "Triad" pointtype 7 lw 6, \
     './dat/STriad.dat' using 1:3 with linespoints title "STriad" pointtype 7 lw 6, \

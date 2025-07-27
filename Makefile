@@ -74,6 +74,7 @@ $(PLOTS_DIR):
 plot: $(PLOTS_DIR)
 	@if test -f "./dat/Init.dat"; then gnuplot ./gnuplot_scripts/Init.gp; fi;
 	@if test -f "./dat/Copy.dat"; then gnuplot ./gnuplot_scripts/Copy.gp; fi;
+	@if test -f "./dat/Sum.dat"; then gnuplot ./gnuplot_scripts/Sum.gp; fi;
 	@if test -f "./dat/Update.dat"; then gnuplot ./gnuplot_scripts/Update.gp; fi;
 	@if test -f "./dat/Triad.dat"; then gnuplot ./gnuplot_scripts/Triad.gp; fi;
 	@if test -f "./dat/STriad.dat"; then gnuplot ./gnuplot_scripts/STriad.gp; fi;

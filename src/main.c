@@ -18,7 +18,8 @@
 #include "util.h"
 
 static void check(double*, double*, double*, double*, int);
-static void kernel_switch(double*, double*, double*, double*, double, int, int, char*, int);
+static void kernelSwitch(
+    double*, double*, double*, double*, double, int, int, char*, int);
 
 int main(int argc, char** argv)
 {
@@ -91,9 +92,9 @@ int main(int argc, char** argv)
     for (int j = 0; j < NUMREGIONS; j++) {
       N = 100;
 
-      if (j == SUM) {
-        continue;
-      }
+      // if (j == SUM) {
+      //   continue;
+      // }
 
       profilerOpenFile(j);
 
@@ -108,15 +109,14 @@ int main(int argc, char** argv)
           if (newtime > 0.1) {
             break;
           }
-          // if ((newtime - oldtime) > 0.0) {
-          //   double factor = 0.3 / (newtime - oldtime);
-          //   iter *= (int)factor;
-          //   oldtime = newtime;
-          // }
-          iter *= 2;
+          if ((newtime - oldtime) > 0.0) {
+            double factor = 0.3 / (newtime - oldtime);
+            iter *= (int)factor;
+            oldtime = newtime;
+          }
         }
 
-        kernel_switch(a, b, c, d, scalar, N, iter, type, j);
+        kernelSwitch(a, b, c, d, scalar, N, iter, type, j);
 
         profilerPrintLine(N, iter, j);
         N = ((double)N * 1.2);
@@ -217,7 +217,7 @@ void check(double* a, double* b, double* c, double* d, int N)
   }
 }
 
-void kernel_switch(double* restrict a,
+void kernelSwitch(double* restrict a,
     double* restrict b,
     double* restrict c,
     double* restrict d,
@@ -239,6 +239,19 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
+  case SUM:
+    if (!strcmp(type, "seq")) {
+      for (int k = 0; k < NTIMES; k++) {
+        _t[SUM][k] = sum_seq(a, N, iter);
+      }
+    } else {
+      for (int k = 0; k < NTIMES; k++) {
+        _t[SUM][k] = sum_tp(a, N, iter);
+      }
+    }
+    break;
+
   case COPY:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {
@@ -250,6 +263,7 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
   case UPDATE:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {
@@ -261,6 +275,7 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
   case TRIAD:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {
@@ -272,6 +287,7 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
   case DAXPY:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {
@@ -283,6 +299,7 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
   case STRIAD:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {
@@ -294,6 +311,7 @@ void kernel_switch(double* restrict a,
       }
     }
     break;
+
   case SDAXPY:
     if (!strcmp(type, "seq")) {
       for (int k = 0; k < NTIMES; k++) {

@@ -70,7 +70,7 @@ double sdaxpy_seq(
   HARNESS(a[i] = a[i] + b[i] * c[i])
 }
 
-double sum_seq(double* restrict a, double scalar, int N, int iter)
+double sum_seq(double* restrict a, int N, int iter)
 {
   double S, E;
   double sum = 0.0;
