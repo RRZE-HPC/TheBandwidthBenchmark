@@ -1,6 +1,8 @@
 bwbench-*
 /build
 .clangd
+dat
+plots
 
 # Prerequisites
 *.d

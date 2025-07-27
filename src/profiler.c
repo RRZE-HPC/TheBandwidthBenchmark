@@ -19,6 +19,8 @@ typedef struct {
 double _t[NUMREGIONS][NTIMES];
 FILE *profilerFile = NULL;
 
+char* dat_directory = "dat\0";
+
 static workType _regions[NUMREGIONS] = {
     {"Init", 1, 0},  {"Sum", 1, 1},   {"Copy", 2, 0},   {"Update", 2, 1},
     {"Triad", 3, 2}, {"Daxpy", 3, 2}, {"STriad", 4, 2}, {"SDaxpy", 4, 2}};
@@ -54,7 +56,7 @@ static void computeStats(double *avgtime, double *maxtime, double *mintime,
 
 void profilerOpenFile(int region) {
   char filename[40];
-  sprintf(filename, "%s.dat", _regions[region].label);
+  sprintf(filename, "%s/%s.dat", dat_directory,_regions[region].label);
   profilerFile = fopen(filename, "w");
   if (_regions[region].flops == 0) {
     fprintf(profilerFile, "# %s: %lu words, no flops\n", _regions[region].label,
