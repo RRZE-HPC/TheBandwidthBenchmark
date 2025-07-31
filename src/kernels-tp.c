@@ -74,19 +74,28 @@ double sdaxpy_tp(
 double sum_tp(double* restrict a, int N, int iter)
 {
   double S, E;
-  double sum = 0.0;
 
-  S = getTimeStamp();
-  // for (int j = 0; j < iter; j++) {
-#pragma omp parallel for simd reduction(+ : sum) schedule(static)
-    for (int i = 0; i < N; i++) {
-      sum += a[i];
+  _Pragma("omp parallel")                                                      
+  { 
+    double* al = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double)); 
+    _Pragma("omp simd") for (int i = 0; i < N; i++) {
+        al[i] = a[i];
     }
-  // }
-  E = getTimeStamp();
+    double sum = 0.0;
+
+    _Pragma("omp single") S = getTimeStamp();
+    for (int j = 0; j < iter; j++) {
+    _Pragma("omp simd") for (int i = 0; i < N; i++) {
+        sum += al[i];
+      }
+      al[N/2] += sum;
+    }
+    _Pragma("omp single") E = getTimeStamp();
+    
+    free(al);
+  }
 
   /* make the compiler think this makes actually sense */
-  a[10] = sum;
 
   return E - S;
 }

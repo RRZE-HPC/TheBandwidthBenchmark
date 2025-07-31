@@ -19,7 +19,7 @@
 
 static void check(double*, double*, double*, double*, int);
 static void kernelSwitch(
-    double*, double*, double*, double*, double, int, int, char*, int);
+    double*, double*, double*, double*, double, int, int, int);
 
 int main(int argc, char** argv)
 {
@@ -30,8 +30,10 @@ int main(int argc, char** argv)
 
   if (argc > 1 && !strcmp(argv[1], "tp")) {
     type = "tp";
+    _SEQ = 0;
   } else if (argc > 1 && !strcmp(argv[1], "seq")) {
     type = "seq";
+    _SEQ = 1;
   }
 
   profilerInit();
@@ -56,6 +58,8 @@ int main(int argc, char** argv)
 
 #pragma omp single
     printf("OpenMP enabled, running with %d threads\n", k);
+#else
+    _SEQ = 1;
 
 #ifdef VERBOSE_AFFINITY
 #pragma omp barrier
@@ -92,10 +96,6 @@ int main(int argc, char** argv)
     for (int j = 0; j < NUMREGIONS; j++) {
       N = 100;
 
-      // if (j == SUM) {
-      //   continue;
-      // }
-
       profilerOpenFile(j);
 
       while (N < SIZE) {
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
           }
         }
 
-        kernelSwitch(a, b, c, d, scalar, N, iter, type, j);
+        kernelSwitch(a, b, c, d, scalar, N, iter, j);
 
         profilerPrintLine(N, iter, j);
         N = ((double)N * 1.2);
@@ -224,12 +224,11 @@ void kernelSwitch(double* restrict a,
     double scalar,
     int N,
     int iter,
-    char* type,
     int j)
 {
   switch (j) {
   case INIT:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[INIT][k] = init_seq(a, scalar, N, iter);
       }
@@ -241,7 +240,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case SUM:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[SUM][k] = sum_seq(a, N, iter);
       }
@@ -253,7 +252,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case COPY:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[COPY][k] = copy_seq(a, b, N, iter);
       }
@@ -265,7 +264,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case UPDATE:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[UPDATE][k] = update_seq(a, scalar, N, iter);
       }
@@ -277,7 +276,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case TRIAD:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
       }
@@ -289,7 +288,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case DAXPY:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
       }
@@ -301,7 +300,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case STRIAD:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
       }
@@ -313,7 +312,7 @@ void kernelSwitch(double* restrict a,
     break;
 
   case SDAXPY:
-    if (!strcmp(type, "seq")) {
+    if (_SEQ) {
       for (int k = 0; k < NTIMES; k++) {
         _t[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
       }

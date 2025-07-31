@@ -72,15 +72,10 @@ $(PLOTS_DIR):
 	@mkdir -p $(PLOTS_DIR)
 
 plot: $(PLOTS_DIR)
-	@if test -f "./dat/Init.dat"; then gnuplot ./gnuplot_scripts/Init.gp; fi;
-	@if test -f "./dat/Copy.dat"; then gnuplot ./gnuplot_scripts/Copy.gp; fi;
-	@if test -f "./dat/Sum.dat"; then gnuplot ./gnuplot_scripts/Sum.gp; fi;
-	@if test -f "./dat/Update.dat"; then gnuplot ./gnuplot_scripts/Update.gp; fi;
-	@if test -f "./dat/Triad.dat"; then gnuplot ./gnuplot_scripts/Triad.gp; fi;
-	@if test -f "./dat/STriad.dat"; then gnuplot ./gnuplot_scripts/STriad.gp; fi;
-	@if test -f "./dat/Daxpy.dat"; then gnuplot ./gnuplot_scripts/Daxpy.gp; fi;
-	@if test -f "./dat/SDaxpy.dat"; then gnuplot ./gnuplot_scripts/SDaxpy.gp; fi;
-	@gnuplot ./gnuplot_scripts/Combined.gp;
+	@./gnuplot_scripts/array_size_vs_bandwidth_plot.sh
+
+plot_dataset: $(PLOTS_DIR)
+	@./gnuplot_scripts/dataset_size_vs_bandwidth_plot.sh
 
 format:
 	@for src in $(SRC) ; do \

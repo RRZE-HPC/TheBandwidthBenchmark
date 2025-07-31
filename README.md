@@ -83,7 +83,7 @@ You can build multiple tool chains in the same directory, but notice that the
 Makefile is only acting on the one currently set. Intermediate build results are
 located in the `./build/<TOOLCHAIN>` directory.
 
-- Clean up intermediate build results for active tool chain with:
+- Clean up intermediate build results for active tool chain, data files and plots with:
 
 ```sh
 make clean
@@ -219,3 +219,36 @@ column format output file. In this case:
 
 Please be aware the single core memory bandwidth as well as the scaling behavior
 depends on the frequency settings.
+
+## Sequential vs Throughput mode: Sweeping over a range of problem size
+
+TheBandwidthBenchmark comes in 2 additional variants: Sequential and Throughput. These 2 modes performs a sweep over different array sizes ranging from N = 100 till the array size N specified in `config.mk`.
+- **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all kernels. Command to run in sequential mode:
+```sh
+$ ./bwBench-<TOOLCHAIN> seq
+```
+- **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded mode for all kernels. Requires flag **ENABLE_OPENMP=true** in `config.mk`. Command to run in throughput mode:
+```sh
+$ ./bwBench-<TOOLCHAIN> tp
+```
+
+Each of these modes output the results for each individual kernel. The output files will be created in `./dat` directory. 
+
+### Visualizing the data from the Sequential/Throughput modes:
+
+Required: Gnuplot 5.2+
+
+The user can easily visualize the outputs from `./dat` directory using the existing gnuplot scripts. The scripts are located in `./gnuplot_script` directory where a bash file takes care of generating and executing the gnuplot commands. The plots from gnuplot can then be found in `./plot` directory.
+
+There are 2 ways you can visualize the output:
+
+- **Plotting Array Size (N) vs Bandwidth (MB/s)** - this mode creates plot with the Array Size (N) on x-axis and Bandwidth (MB/s) on y-axis. The Array size (N) will be the same for each kernel. Use this makefile command to generate this type of plot:
+```sh
+$ make plot
+```
+- **Plotting Dataset Size (MB) vs Bandwidth (MB/s)** - this mode creates plot with the Dataset Size (MB) on x-axis and Bandwidth (MB/s) on y-axis. The Dataset size (MB) will be the different for each kernel. e.g. the total dataset for Init kernel will be 4x times less than the total dataset size for the STriad kernel.
+```sh
+$ make plot_dataset
+```
+
+The script also generates a combined plot with bandwidths from all the kernels into one plot.

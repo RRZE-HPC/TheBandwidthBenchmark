@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <omp.h>
 
 #include "profiler.h"
 #include "util.h"
@@ -17,6 +18,8 @@ typedef struct {
 } workType;
 
 double _t[NUMREGIONS][NTIMES];
+int _SEQ = 0;
+
 FILE* profilerFile = NULL;
 
 char* dat_directory = "dat\0";
@@ -95,14 +98,25 @@ void profilerPrintLine(size_t N, int iter, int j)
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
 
+  int num_threads = 1;
+
+#ifdef _OPENMP
+  if(!_SEQ) {
+    _Pragma("omp parallel")
+    {
+      num_threads = omp_get_num_threads();
+    }
+  }
+#endif
+
   computeStats(&avgtime, &maxtime, &mintime, j);
-  double bytes = (double)_regions[j].words * sizeof(double) * N;
-  double flops = (double)_regions[j].flops * N * iter;
+  double bytes = (double)_regions[j].words * sizeof(double) * N * num_threads;
+  double flops = (double)_regions[j].flops * N * iter * num_threads;
 
   // N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  Max time(s)
   if (flops > 0) {
     fprintf(profilerFile,
-        "%lu %11.2f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
+        "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
         N,
         1.0E-06 * bytes,
         1.0E-09 * bytes * iter / mintime,
@@ -114,7 +128,7 @@ void profilerPrintLine(size_t N, int iter, int j)
   // N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)
   else {
     fprintf(profilerFile,
-        "%lu %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
+        "%lu %11.5f %11.2f %11.4f  %11.4f  %11.4f\n",
         N,
         1.0E-06 * bytes,
         1.0E-09 * bytes * iter / mintime,

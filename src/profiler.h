@@ -26,6 +26,7 @@ typedef enum {
 } regions;
 
 extern double _t[NUMREGIONS][NTIMES];
+extern int _SEQ;
 extern void profilerInit();
 extern void profilerPrint(size_t size);
 extern void profilerOpenFile(int region);
