@@ -141,6 +141,9 @@ sequential (call with `seq` mode option) and throughput (call with `tp` mode
 option). These are intended for scanning the complete memory hierarchy instead
 of only the main memory domain. See below for details on how to use those modes.
 
+**NOTICE:** The `seq` and `tp` modes may take up to 30m or more, depending on the
+system.
+
 In default mode the benchmark will output the results similar to the stream
 benchmark. Results are validated. For threaded execution it is recommended to
 control thread affinity.
