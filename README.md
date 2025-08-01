@@ -37,11 +37,6 @@ vectors, s is a scalar:
 - striad (L3, S1, WA): Schoenauer triad: `a = b + c * d`.
 - sdaxpy (L3, S1): Schoenauer triad without write allocate: `a = a + b * c`.
 
-As added benefit the code is a blueprint for a minimal benchmarking application
-with a generic makefile and modules for aligned array allocation, accurate
-timing and affinity settings. Those components can be used standalone in your
-own project.
-
 ## Build
 
 1. Configure the tool chain and additional options in `config.mk`:
@@ -123,17 +118,32 @@ server will not work. The default Make version included in MacOS is 3.81! Newer 
 versions can be easily installed on MacOS using the
 [Homebrew](https://brew.sh/) package manager.
 
+An alternative is to use [Bear](https://github.com/rizsotto/Bear), a tool that
+generates a compilation database for clang tooling. This method also will enable
+to jump to any definition without a previously opened buffer. You have to build
+TheBandwidthBenchmark one time with Bear as a wrapper:
+
+```sh
+bear -- make
+```
+
 ## Usage
 
 To run the benchmark call:
 
 ```sh
-./bwBench-<TOOLCHAIN>
+./bwBench-<TOOLCHAIN> [mode (optional)]
 ```
 
-The benchmark will output the results similar to the stream benchmark. Results
-are validated. For threaded execution it is recommended to control thread
-affinity.
+Apart from the default parallel work sharing mode with fixed problem size
+TheBandwidthBenchmark also supports two modes with varying problem sizes:
+sequential (call with `seq` mode option) and throughput (call with `tp` mode
+option). These are intended for scanning the complete memory hierarchy instead
+of only the main memory domain. See below for details on how to use those modes.
+
+In default mode the benchmark will output the results similar to the stream
+benchmark. Results are validated. For threaded execution it is recommended to
+control thread affinity.
 
 We recommend to use `likwid-pin` for setting the number of threads used and to
 control thread affinity:
@@ -222,33 +232,57 @@ depends on the frequency settings.
 
 ## Sequential vs Throughput mode: Sweeping over a range of problem size
 
-TheBandwidthBenchmark comes in 2 additional variants: Sequential and Throughput. These 2 modes performs a sweep over different array sizes ranging from N = 100 till the array size N specified in `config.mk`.
-- **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all kernels. Command to run in sequential mode:
+TheBandwidthBenchmark comes in 2 additional variants: Sequential and Throughput.
+These 2 modes performs a sweep over different array sizes ranging from N = 100
+till the array size N specified in `config.mk`.
+
+- **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all
+  kernels. Command to run in sequential mode:
+
 ```sh
-$ ./bwBench-<TOOLCHAIN> seq
-```
-- **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded mode for all kernels. Requires flag **ENABLE_OPENMP=true** in `config.mk`. Command to run in throughput mode:
-```sh
-$ ./bwBench-<TOOLCHAIN> tp
+./bwBench-<TOOLCHAIN> seq
 ```
 
-Each of these modes output the results for each individual kernel. The output files will be created in `./dat` directory. 
+- **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded
+  mode for all kernels. Requires flag **ENABLE_OPENMP=true** in `config.mk`.
+  Command to run in throughput mode:
 
-### Visualizing the data from the Sequential/Throughput modes:
+```sh
+./bwBench-<TOOLCHAIN> tp
+```
+
+Each of these modes output the results for each individual kernel. The output
+files will be created in the `./dat` directory.
+
+### Visualizing the data from the Sequential/Throughput modes
 
 Required: Gnuplot 5.2+
 
-The user can easily visualize the outputs from `./dat` directory using the existing gnuplot scripts. The scripts are located in `./gnuplot_script` directory where a bash file takes care of generating and executing the gnuplot commands. The plots from gnuplot can then be found in `./plot` directory.
+The user can visualize the outputs from `./dat` directory using the provided
+gnuplot scripts. The scripts are located in `./gnuplot_script` directory where a
+bash file takes care of generating and executing the gnuplot commands. The plots
+from gnuplot can then be found in `./plot` directory.
 
 There are 2 ways you can visualize the output:
 
-- **Plotting Array Size (N) vs Bandwidth (MB/s)** - this mode creates plot with the Array Size (N) on x-axis and Bandwidth (MB/s) on y-axis. The Array size (N) will be the same for each kernel. Use this makefile command to generate this type of plot:
+- **Plotting Array Size (N) vs Bandwidth (MB/s)** - this mode creates plot with
+  the Array Size (N) on x-axis and Bandwidth (MB/s) on y-axis. The Array size (N)
+  will be the same for each kernel. Use this makefile command to generate this
+  type of plot:
+
 ```sh
-$ make plot
-```
-- **Plotting Dataset Size (MB) vs Bandwidth (MB/s)** - this mode creates plot with the Dataset Size (MB) on x-axis and Bandwidth (MB/s) on y-axis. The Dataset size (MB) will be the different for each kernel. e.g. the total dataset for Init kernel will be 4x times less than the total dataset size for the STriad kernel.
-```sh
-$ make plot_dataset
+make plot
 ```
 
-The script also generates a combined plot with bandwidths from all the kernels into one plot.
+- **Plotting Dataset Size (MB) vs Bandwidth (MB/s)** - this mode creates plot
+  with the Dataset Size (MB) on x-axis and Bandwidth (MB/s) on y-axis. The Dataset
+  size (MB) will be the different for each kernel. For example the total dataset
+  for Init kernel will be 4x times less than the total dataset size for the STriad
+  kernel.
+
+```sh
+make plot_dataset
+```
+
+The script also generates a combined plot with bandwidths from all the kernels
+into one plot.
