@@ -12,7 +12,7 @@ FAST_WORKAROUND = -O3 -static -fp-model=fast
 endif
 
 VERSION  = --version
-CFLAGS   = $(FAST_WORKAROUND) -xHost -qopt-streaming-stores=always -std=c99 -Wno-unused-command-line-argument -ffreestanding $(OPENMP)
+CFLAGS   = $(FAST_WORKAROUND) -xHost -std=c99 -Wno-unused-command-line-argument -ffreestanding $(OPENMP)
 LFLAGS   = $(OPENMP)
 DEFINES  = -D_GNU_SOURCE
 INCLUDES =

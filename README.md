@@ -289,3 +289,13 @@ make plot_dataset
 
 The script also generates a combined plot with bandwidths from all the kernels
 into one plot.
+
+## Caveats
+A few known caveats to the user, based on the experience with the compilers.
+
+- Intel oneAPI DPC++/C++ Compiler 2023.2.0 (icx/icpx compiler):
+  - NonTemporal Stores (aka Streaming Stores): We leave the choice to the user whether to use NT stores or not. 
+    - If the user wants to use NT stores using `-qopt-streaming-stores=always` compiler flag, then the user has to avoid using the `-ffreestanding` compiler flag. This will not generate NT instructions, but generates calls to `__libirc_nontemporal_store@PLT` in the assembly. 
+    - For the Througput mode with OpenMP, the icx/icpx compiler does not respect the `nontemporal()` clause with the OpenMP `simd` directive.
+
+    It's recommended not to use NT stores if the user wants to observe cache hierarchy when using the Sequential or Throughput mode.
