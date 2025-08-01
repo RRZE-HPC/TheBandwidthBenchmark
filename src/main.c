@@ -14,19 +14,17 @@
 #include "allocate.h"
 #include "kernels.h"
 #include "profiler.h"
-#include "timing.h"
 #include "util.h"
 
-static void check(double*, double*, double*, double*, int);
-static void kernelSwitch(
-    double*, double*, double*, double*, double, int, int, int);
+static void check(double *, double *, double *, double *, int);
+static void kernelSwitch(double *, double *, double *, double *, double, int,
+                         int, int);
 
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
   size_t bytesPerWord = sizeof(double);
-  size_t N            = SIZE;
+  size_t N = SIZE;
   double *a, *b, *c, *d;
-  char* type = "ws";
+  char *type = "ws";
 
   if (argc > 1 && !strcmp(argv[1], "tp")) {
     type = "tp";
@@ -38,43 +36,40 @@ int main(int argc, char** argv)
 
   profilerInit();
 
-  a = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  b = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  c = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  d = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
+  a = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
+  b = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
+  c = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
+  d = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
 
   printf("\n");
   printf(BANNER);
   printf(HLINE);
   printf("Total allocated datasize: %8.2f MB\n",
-      4.0 * bytesPerWord * N * 1.0E-06);
+         4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
   printf(HLINE);
-  _Pragma("omp parallel")
-  {
+  _Pragma("omp parallel") {
     int k = omp_get_num_threads();
     int i = omp_get_thread_num();
 
 #pragma omp single
     printf("OpenMP enabled, running with %d threads\n", k);
-#else
-    _SEQ = 1;
 
 #ifdef VERBOSE_AFFINITY
 #pragma omp barrier
 #pragma omp critical
     {
-      printf("Thread %d running on processor %d\n",
-          i,
-          affinity_getProcessorId());
+      printf("Thread %d running on processor %d\n", i,
+             affinity_getProcessorId());
       affinity_getmask();
     }
 #endif
   }
+#else
+  _SEQ = 1;
 #endif
 
-  double S = getTimeStamp();
 #pragma omp parallel for schedule(static)
   for (int i = 0; i < N; i++) {
     a[i] = 2.0;
@@ -82,11 +77,6 @@ int main(int argc, char** argv)
     c[i] = 0.5;
     d[i] = 1.0;
   }
-  double E = getTimeStamp();
-#ifdef VERBOSE_TIMER
-  printf("Timer resolution %.2e ", getTimeResolution());
-  printf("Ticks used %.0e\n", (E - S) / getTimeResolution());
-#endif
 
   double scalar = 0.1;
 
@@ -102,7 +92,7 @@ int main(int argc, char** argv)
 
         double newtime = 0.0;
         double oldtime = 0.0;
-        int iter       = 2;
+        int iter = 2;
 
         while (newtime < 0.3) {
           newtime = striad_seq(a, b, c, d, N, iter);
@@ -146,8 +136,7 @@ int main(int argc, char** argv)
   return EXIT_SUCCESS;
 }
 
-void check(double* a, double* b, double* c, double* d, int N)
-{
+void check(double *a, double *b, double *c, double *d, int N) {
   double aj, bj, cj, dj, scalar;
   double asum, bsum, csum, dsum;
   double epsilon;
@@ -217,15 +206,8 @@ void check(double* a, double* b, double* c, double* d, int N)
   }
 }
 
-void kernelSwitch(double* restrict a,
-    double* restrict b,
-    double* restrict c,
-    double* restrict d,
-    double scalar,
-    int N,
-    int iter,
-    int j)
-{
+void kernelSwitch(double *restrict a, double *restrict b, double *restrict c,
+                  double *restrict d, double scalar, int N, int iter, int j) {
   switch (j) {
   case INIT:
     if (_SEQ) {
