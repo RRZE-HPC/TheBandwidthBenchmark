@@ -5,7 +5,6 @@
 #ifndef __PROFILER_H_
 #define __PROFILER_H_
 #include "likwid-marker.h"
-#include "timing.h"
 #include <stddef.h>
 
 #define PROFILE(tag, call)                                                     \

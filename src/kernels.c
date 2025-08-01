@@ -11,15 +11,17 @@
 #define HARNESS(kernel)                                                        \
   double S, E;                                                                 \
   S = getTimeStamp();                                                          \
-  _Pragma("omp parallel for schedule(static)") for (int i = 0; i < N; i++) {   \
+  _Pragma("omp parallel for schedule(static)") for (int i = 0; i < N; i++)     \
+  {                                                                            \
     kernel;                                                                    \
   }                                                                            \
   E = getTimeStamp();                                                          \
   return E - S;
 
-double init(double *restrict a, double scalar, int N) { HARNESS(a[i] = scalar) }
+double init(double* restrict a, double scalar, int N) { HARNESS(a[i] = scalar) }
 
-double sum(double *restrict a, int N) {
+double sum(double* restrict a, int N)
+{
   double S, E;
   double sum = 0.0;
 
@@ -36,29 +38,40 @@ double sum(double *restrict a, int N) {
   return E - S;
 }
 
-double update(double *restrict a, double scalar, int N) {
+double update(double* restrict a, double scalar, int N)
+{
   HARNESS(a[i] = a[i] * scalar)
 }
 
-double copy(double *restrict a, double *restrict b, int N) {
+double copy(double* restrict a, double* restrict b, int N)
+{
   HARNESS(a[i] = b[i])
 }
 
-double triad(double *restrict a, double *restrict b, double *restrict c,
-             double scalar, int N) {
+double triad(double* restrict a,
+    double* restrict b,
+    double* restrict c,
+    double scalar,
+    int N)
+{
   HARNESS(a[i] = b[i] + scalar * c[i])
 }
 
-double striad(double *restrict a, double *restrict b, double *restrict c,
-              double *restrict d, int N) {
+double striad(double* restrict a,
+    double* restrict b,
+    double* restrict c,
+    double* restrict d,
+    int N)
+{
   HARNESS(a[i] = b[i] + d[i] * c[i])
 }
 
-double daxpy(double *restrict a, double *restrict b, double scalar, int N) {
+double daxpy(double* restrict a, double* restrict b, double scalar, int N)
+{
   HARNESS(a[i] = a[i] + scalar * b[i])
 }
 
-double sdaxpy(double *restrict a, double *restrict b, double *restrict c,
-              int N) {
+double sdaxpy(double* restrict a, double* restrict b, double* restrict c, int N)
+{
   HARNESS(a[i] = a[i] + b[i] * c[i])
 }

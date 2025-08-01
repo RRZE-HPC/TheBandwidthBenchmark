@@ -75,23 +75,19 @@ double sum_tp(double* restrict a, int N, int iter)
 {
   double S, E;
 
-  _Pragma("omp parallel")                                                      
-  { 
-    double* al = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double)); 
-    _Pragma("omp simd") for (int i = 0; i < N; i++) {
-        al[i] = a[i];
-    }
+  _Pragma("omp parallel")
+  {
+    double* al = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+    _Pragma("omp simd") for (int i = 0; i < N; i++) { al[i] = a[i]; }
     double sum = 0.0;
 
     _Pragma("omp single") S = getTimeStamp();
     for (int j = 0; j < iter; j++) {
-    _Pragma("omp simd") for (int i = 0; i < N; i++) {
-        sum += al[i];
-      }
-      al[N/2] += sum;
+      _Pragma("omp simd") for (int i = 0; i < N; i++) { sum += al[i]; }
+      al[N / 2] += sum;
     }
     _Pragma("omp single") E = getTimeStamp();
-    
+
     free(al);
   }
 

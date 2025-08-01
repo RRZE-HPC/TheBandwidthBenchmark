@@ -6,13 +6,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "profiler.h"
 #include "util.h"
 
 typedef struct {
-  char* label;
+  char *label;
   size_t words;
   size_t flops;
 } workType;
@@ -20,24 +22,17 @@ typedef struct {
 double _t[NUMREGIONS][NTIMES];
 int _SEQ = 0;
 
-FILE* profilerFile = NULL;
+FILE *profilerFile = NULL;
 
-char* dat_directory = "dat\0";
+char *dat_directory = "dat\0";
 
-static workType _regions[NUMREGIONS] = { { "Init", 1, 0 },
-  { "Sum", 1, 1 },
-  { "Copy", 2, 0 },
-  { "Update", 2, 1 },
-  { "Triad", 3, 2 },
-  { "Daxpy", 3, 2 },
-  { "STriad", 4, 2 },
-  { "SDaxpy", 4, 2 } };
+static workType _regions[NUMREGIONS] = {
+    {"Init", 1, 0},  {"Sum", 1, 1},   {"Copy", 2, 0},   {"Update", 2, 1},
+    {"Triad", 3, 2}, {"Daxpy", 3, 2}, {"STriad", 4, 2}, {"SDaxpy", 4, 2}};
 
-void profilerInit(void)
-{
+void profilerInit(void) {
   LIKWID_MARKER_INIT;
-  _Pragma("omp parallel")
-  {
+  _Pragma("omp parallel") {
     LIKWID_MARKER_REGISTER("INIT");
     LIKWID_MARKER_REGISTER("SUM");
     LIKWID_MARKER_REGISTER("COPY");
@@ -49,9 +44,8 @@ void profilerInit(void)
   }
 }
 
-static void computeStats(
-    double* avgtime, double* maxtime, double* mintime, int j)
-{
+static void computeStats(double *avgtime, double *maxtime, double *mintime,
+                         int j) {
   *avgtime = 0;
   *maxtime = 0;
   *mintime = FLT_MAX;
@@ -65,25 +59,22 @@ static void computeStats(
   *avgtime /= (double)(NTIMES - 1);
 }
 
-void profilerOpenFile(int region)
-{
+void profilerOpenFile(int region) {
   char filename[40];
   sprintf(filename, "%s/%s.dat", dat_directory, _regions[region].label);
   profilerFile = fopen(filename, "w");
   if (_regions[region].flops == 0) {
-    fprintf(profilerFile,
-        "# %s: %lu words, no flops\n",
-        _regions[region].label,
-        _regions[region].words);
-    fprintf(profilerFile,
+    fprintf(profilerFile, "# %s: %lu words, no flops\n", _regions[region].label,
+            _regions[region].words);
+    fprintf(
+        profilerFile,
         "# N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)\n");
   } else {
-    fprintf(profilerFile,
-        "# %s: %lu words, %lu flops\n",
-        _regions[region].label,
-        _regions[region].words,
-        _regions[region].words);
-    fprintf(profilerFile,
+    fprintf(profilerFile, "# %s: %lu words, %lu flops\n",
+            _regions[region].label, _regions[region].words,
+            _regions[region].words);
+    fprintf(
+        profilerFile,
         "# N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  "
         "Max time(s)\n");
   }
@@ -93,19 +84,15 @@ void profilerOpenFile(int region)
 
 void profilerCloseFile(void) { fclose(profilerFile); }
 
-void profilerPrintLine(size_t N, int iter, int j)
-{
+void profilerPrintLine(size_t N, int iter, int j) {
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
 
   int num_threads = 1;
 
 #ifdef _OPENMP
-  if(!_SEQ) {
-    _Pragma("omp parallel")
-    {
-      num_threads = omp_get_num_threads();
-    }
+  if (!_SEQ) {
+    _Pragma("omp parallel") { num_threads = omp_get_num_threads(); }
   }
 #endif
 
@@ -113,33 +100,22 @@ void profilerPrintLine(size_t N, int iter, int j)
   double bytes = (double)_regions[j].words * sizeof(double) * N * num_threads;
   double flops = (double)_regions[j].flops * N * iter * num_threads;
 
-  // N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  Max time(s)
+  // N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  Max
+  // time(s)
   if (flops > 0) {
-    fprintf(profilerFile,
-        "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
-        N,
-        1.0E-06 * bytes,
-        1.0E-09 * bytes * iter / mintime,
-        1.0E-06 * flops / mintime,
-        avgtime,
-        mintime,
-        maxtime);
+    fprintf(profilerFile, "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
+            N, 1.0E-06 * bytes, 1.0E-09 * bytes * iter / mintime,
+            1.0E-06 * flops / mintime, avgtime, mintime, maxtime);
   }
   // N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)
   else {
-    fprintf(profilerFile,
-        "%lu %11.5f %11.2f %11.4f  %11.4f  %11.4f\n",
-        N,
-        1.0E-06 * bytes,
-        1.0E-09 * bytes * iter / mintime,
-        avgtime,
-        mintime,
-        maxtime);
+    fprintf(profilerFile, "%lu %11.5f %11.2f %11.4f  %11.4f  %11.4f\n", N,
+            1.0E-06 * bytes, 1.0E-09 * bytes * iter / mintime, avgtime, mintime,
+            maxtime);
   }
 }
 
-void profilerPrint(size_t N)
-{
+void profilerPrint(size_t N) {
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
 
@@ -147,9 +123,8 @@ void profilerPrint(size_t N)
   printf(HLINE);
   printf("Dataset sizes\n");
   for (int i = 0; i < NUMREGIONS; i++) {
-    printf("%s: %8.2f MB\n",
-        _regions[i].label,
-        _regions[i].words * bytesPerWord * N * 1.0E-06);
+    printf("%s: %8.2f MB\n", _regions[i].label,
+           _regions[i].words * bytesPerWord * N * 1.0E-06);
   }
 #endif
 
@@ -163,20 +138,13 @@ void profilerPrint(size_t N)
     double flops = (double)_regions[j].flops * N;
 
     if (flops > 0) {
-      printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
-          _regions[j].label,
-          1.0E-06 * bytes / mintime,
-          1.0E-06 * flops / mintime,
-          avgtime,
-          mintime,
-          maxtime);
+      printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", _regions[j].label,
+             1.0E-06 * bytes / mintime, 1.0E-06 * flops / mintime, avgtime,
+             mintime, maxtime);
     } else {
       printf("%-12s%11.2f      -      %11.4f  %11.4f  %11.4f\n",
-          _regions[j].label,
-          1.0E-06 * bytes / mintime,
-          avgtime,
-          mintime,
-          maxtime);
+             _regions[j].label, 1.0E-06 * bytes / mintime, avgtime, mintime,
+             maxtime);
     }
   }
   printf(HLINE);
