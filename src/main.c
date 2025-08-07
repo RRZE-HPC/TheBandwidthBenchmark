@@ -23,6 +23,15 @@ static void kernelSwitch(double *, double *, double *, double *, double, int,
 int main(int argc, char **argv) {
   size_t bytesPerWord = sizeof(double);
   size_t N = SIZE;
+  size_t num_threads = 0;
+  #pragma omp parallel
+  {
+    #pragma omp single
+    num_threads = omp_get_num_threads();
+  }
+  int base = (N + num_threads - 1) / num_threads;
+  N = ((base + 7) & ~7) * num_threads;
+
   double *a, *b, *c, *d;
   char *type = "ws";
 
