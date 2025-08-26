@@ -9,6 +9,8 @@ BUILD_DIR  = ./build/$(TOOLCHAIN)
 DATA_DIR   = ./dat
 PLOTS_DIR  = ./plots
 SRC_DIR    = ./src
+CPU_DIR    = $(SRC_DIR)/cpu
+GPU_DIR    = $(SRC_DIR)/gpu
 MAKE_DIR   = ./mk
 Q         ?= @
 
@@ -16,13 +18,25 @@ Q         ?= @
 include config.mk
 include $(MAKE_DIR)/include_$(TOOLCHAIN).mk
 include $(MAKE_DIR)/include_LIKWID.mk
-INCLUDES  += -I$(SRC_DIR)/includes -I$(BUILD_DIR)
+INCLUDES  += -I$(SRC_DIR)/includes -I$(BUILD_DIR) -I$(CPU_DIR) -I$(GPU_DIR)
 
-VPATH     = $(SRC_DIR)
-ASM       = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.s,$(wildcard $(SRC_DIR)/*.c))
-OBJ       = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c))
-SRC       =  $(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/*.c)
+MAIN_SRC := $(SRC_DIR)/main.c
+CPU_SRC  := $(wildcard $(CPU_DIR)/*.c)
+GPU_SRC  := $(wildcard $(GPU_DIR)/*.cu $(GPU_DIR)/*.c)
+
+SRC :=
+ifeq ($(TOOLCHAIN),NVCC)
+    SRC := $(MAIN_SRC) $(GPU_SRC)
+else
+    SRC := $(MAIN_SRC) $(CPU_SRC)
+endif
+
+VPATH := $(SRC_DIR) $(CPU_DIR) $(GPU_DIR)
+OBJ := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SRC:%.c=%.o))
+OBJ := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(OBJ:%.cu=%.o))
+
 CPPFLAGS := $(CPPFLAGS) $(DEFINES) $(OPTIONS) $(INCLUDES)
+
 c := ,
 clist = $(subst $(eval) ,$c,$(strip $1))
 
@@ -37,9 +51,18 @@ ${TARGET}: $(BUILD_DIR) .clangd $(OBJ) $(DATA_DIR)
 	$(Q)${LD} ${LFLAGS} -o $(TARGET) $(OBJ) $(LIBS)
 
 $(BUILD_DIR)/%.o:  %.c $(MAKE_DIR)/include_$(TOOLCHAIN).mk config.mk
+	@mkdir -p $(dir $@)
 	$(info ===>  COMPILE  $@)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
 	$(Q)$(CC) $(CPPFLAGS) -MT $(@:.d=.o) -MM  $< > $(BUILD_DIR)/$*.d
+	
+# CUDA files
+ifeq ($(TOOLCHAIN),NVCC)
+$(BUILD_DIR)/%.o: %.cu 
+	@mkdir -p $(dir $@)
+	$(info ===>  COMPILE CUDA  $@)
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $< -o $@
+endif
 
 $(BUILD_DIR)/%.s:  %.c
 	$(info ===>  GENERATE ASM  $@)

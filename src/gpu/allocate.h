@@ -2,30 +2,10 @@
  * All rights reserved. This file is part of TheBandwidthBenchmark.
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
-#include <stdio.h>
+#ifndef __ALLOCATE_H_
+#define __ALLOCATE_H_
 #include <stdlib.h>
-#include <string.h>
+#include "util.h"
 
-#ifdef _NVCC
-#include "gpu/gpu.h"
-#else
-#include "cpu/cpu.h"
+extern void allocate(double *restrict a[], double *restrict b[], double *restrict c[], double *restrict d[], size_t arraySize);
 #endif
-
-int main(int argc, char **argv) 
-{
-
-#ifdef _NVCC
-
-  gpuBenchmarks(argc, argv);
-
-#else
-
-  cpuBenchmarks(argc, argv);
-
-#endif
-
-  return EXIT_SUCCESS;
-
-}
-
