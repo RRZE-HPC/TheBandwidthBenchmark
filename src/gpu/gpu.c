@@ -23,6 +23,11 @@ extern inline void gpuBenchmarks(int argc, char **argv) {
 
 #ifdef _OPENMP
   GPU_ERROR(cudaGetDeviceCount(&numDevices));
+  _Pragma("omp parallel") {
+    int k = omp_get_num_threads();
+    numDevices = MIN(k, numDevices);
+    omp_set_num_threads(numDevices);
+  }
 #endif
 
   double *a[numDevices], *b[numDevices], *c[numDevices], *d[numDevices];
@@ -37,28 +42,30 @@ extern inline void gpuBenchmarks(int argc, char **argv) {
 
   allocate(a, b, c, d, N);
 
+  setBlockSize();
+
   printf("\n");
   printf(BANNER);
   printf(HLINE);
-  printf("Total allocated datasize per GPU: %8.2f MB\n",
-         4.0 * bytesPerWord * N * 1.0E-06);
-  printf("Total allocated datasize: %8.2f MB\n",
-         4.0 * bytesPerWord * N * numDevices * 1.0E-06);
+  printf("Total allocated datasize per GPU: %8.2f GB\n",
+         4.0 * bytesPerWord * N * 1.0E-09);
+  printf("Total allocated datasize: %8.2f GB\n",
+         4.0 * bytesPerWord * N * numDevices * 1.0E-09);
 
 #ifdef _OPENMP
   printf(HLINE);
   _Pragma("omp parallel") {
     int k = omp_get_num_threads();
     int i = omp_get_thread_num();
-
     // Logic to set maximum of #threads vs #GPUs available on node
     // #threads can be > #GPUs. If no OpenMP, then numDevices stays 1, 
     // meaning only 1 GPU is used for benchmarking.
-    int max = MAX(k, numDevices);
-    omp_set_num_threads(max);
 
 #pragma omp single
-    printf("OpenMP enabled, running with %d threads and %d GPUs\n", max, numDevices);
+  {
+    printf("OpenMP enabled, running with %d threads and %d GPUs\n", k, numDevices);
+    printf("Running with %d threadBlockSize, %d threadBlockPerSM. Expected %.2f%% thread occupancy\n", threadBlockSize, threadBlocksPerStreamingMultiprocessor, occupancy);
+  }
 
 #ifdef VERBOSE_AFFINITY
 #pragma omp barrier
@@ -87,9 +94,7 @@ extern inline void gpuBenchmarks(int argc, char **argv) {
 
   for (int k = 0; k < NTIMES; k++) {
     PROFILE(INIT, init_wrapper(b, scalar, N));
-    // double tmp = a[10];
-    // PROFILE(SUM, sum(a, N));
-    // a[10] = tmp;
+    // PROFILE(SUM, sum_wrapper(a, N));
     PROFILE(COPY, copy_wrapper(c, a, N));
     PROFILE(UPDATE, update_wrapper(a, scalar, N));
     PROFILE(TRIAD, triad_wrapper(a, b, c, scalar, N));
@@ -98,4 +103,5 @@ extern inline void gpuBenchmarks(int argc, char **argv) {
     PROFILE(SDAXPY, sdaxpy_wrapper(a, b, c, N));
   }
 
+  profilerPrint(N);
 }

@@ -47,6 +47,17 @@ __global__ void copy(double *__restrict__ c, double *__restrict__ a, size_t N) {
 
 }
 
+__global__ void sum(double *__restrict__ a, size_t N) {
+  
+  int tidx = threadIdx.x + blockIdx.x * blockDim.x;
+  
+  if (tidx >= N)
+    return;
+
+  a[tidx] = 1.1;
+
+}
+
 __global__ void update(double *__restrict__ a, int scalar, size_t N) {
   
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;

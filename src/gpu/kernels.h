@@ -9,6 +9,7 @@ extern "C" {
 __global__ void init_all(double *__restrict__ a, double *__restrict__ b, double *__restrict__ c, double *__restrict__  d, size_t N);
 __global__ void init(double *__restrict__ b, int scalar, size_t N);
 __global__ void copy(double *__restrict__ c, double *__restrict__ a, size_t N);
+__global__ void sum(double *__restrict__ a, size_t N);
 __global__ void update(double *__restrict__ a, int scalar, size_t N);
 __global__ void triad(double *__restrict__ a, double *__restrict__ b, double *__restrict__ c, int scalar, size_t N);
 __global__ void daxpy(double *__restrict__ a, double *__restrict__ b, int scalar, size_t N);

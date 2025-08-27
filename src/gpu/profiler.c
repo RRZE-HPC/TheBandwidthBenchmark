@@ -13,6 +13,7 @@
 
 #include "profiler.h"
 #include "util.h"
+#include "gpu.h"
 
 typedef struct {
   char *label;
@@ -116,21 +117,21 @@ void profilerPrint(size_t N) {
 #endif
 
   printf(HLINE);
-  printf("Function      Rate(MB/s)  Rate(MFlop/s)  Avg time     Min time     "
+  printf("Function      Rate(GB/s)  Rate(GFlop/s)  Avg time     Min time     "
          "Max time\n");
 
   for (int j = 0; j < NUMREGIONS; j++) {
     computeStats(&avgtime, &maxtime, &mintime, j);
-    double bytes = (double)_regions[j].words * sizeof(double) * N;
-    double flops = (double)_regions[j].flops * N;
+    double bytes = (double)_regions[j].words * numDevices * sizeof(double) * N;
+    double flops = (double)_regions[j].flops * numDevices * N;
 
     if (flops > 0) {
       printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", _regions[j].label,
-             1.0E-06 * bytes / mintime, 1.0E-06 * flops / mintime, avgtime,
+             1.0E-09 * bytes / mintime, 1.0E-09 * flops / mintime, avgtime,
              mintime, maxtime);
     } else {
       printf("%-12s%11.2f      -      %11.4f  %11.4f  %11.4f\n",
-             _regions[j].label, 1.0E-06 * bytes / mintime, avgtime, mintime,
+             _regions[j].label, 1.0E-09 * bytes / mintime, avgtime, mintime,
              maxtime);
     }
   }
