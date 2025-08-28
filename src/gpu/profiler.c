@@ -60,10 +60,10 @@ void profilerOpenFile(int region) {
   } else {
     fprintf(profilerFile, "# %s: %lu words, %lu flops\n",
             _regions[region].label, _regions[region].words,
-            _regions[region].words);
+            _regions[region].flops);
     fprintf(
         profilerFile,
-        "# N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  "
+        "# N  Bytes(MB)  Rate(GB/s)  Rate(GFlop/s)  Avg time(s)  Min time(s)  "
         "Max time(s)\n");
   }
 
@@ -85,15 +85,15 @@ void profilerPrintLine(size_t N, int iter, int j) {
 #endif
 
   computeStats(&avgtime, &maxtime, &mintime, j);
-  double bytes = (double)_regions[j].words * sizeof(double) * N * num_threads;
-  double flops = (double)_regions[j].flops * N * iter * num_threads;
+  double bytes = (double)_regions[j].words * sizeof(double) * numDevices * N * num_threads;
+  double flops = (double)_regions[j].flops * numDevices * N * iter * num_threads;
 
   // N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  Max
   // time(s)
   if (flops > 0) {
     fprintf(profilerFile, "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
             N, 1.0E-06 * bytes, 1.0E-09 * bytes * iter / mintime,
-            1.0E-06 * flops / mintime, avgtime, mintime, maxtime);
+            1.0E-09 * flops / mintime, avgtime, mintime, maxtime);
   }
   // N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)
   else {

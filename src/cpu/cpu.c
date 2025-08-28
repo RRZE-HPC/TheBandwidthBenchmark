@@ -13,7 +13,7 @@
 #include "util.h"
 
 static void check(double *, double *, double *, double *, int);
-static void kernelSwitch(double *, double *, double *, double *, double, int,
+static void kernelSwitch(double *, double *, double *, double *, double, size_t,
                          int, int);
 
 extern inline void cpuBenchmarks(int argc, char **argv) {
@@ -202,7 +202,7 @@ void check(double *a, double *b, double *c, double *d, int N) {
 }
 
 void kernelSwitch(double *restrict a, double *restrict b, double *restrict c,
-                  double *restrict d, double scalar, int N, int iter, int j) {
+                  double *restrict d, double scalar, size_t N, int iter, int j) {
   switch (j) {
   case INIT:
     if (_SEQ) {

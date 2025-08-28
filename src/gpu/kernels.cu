@@ -10,6 +10,11 @@
 #include "kernels.h"
 #include "util.h"
 
+int thread_block_size = 1;
+int max_thread_block_size = 1;
+int max_threads_per_streaming_multiprocessor = 1;
+int thread_blocks_per_streaming_multiprocessor = 1;
+double occupancy = 0.0;
 
 __global__ void init_all(double *__restrict__ a, double *__restrict__ b, double *__restrict__ c, double *__restrict__ d, const size_t N) {
   
@@ -44,17 +49,6 @@ __global__ void copy(double *__restrict__ c, double *__restrict__ a, size_t N) {
     return;
 
   c[tidx] = a[tidx];
-
-}
-
-__global__ void sum(double *__restrict__ a, size_t N) {
-  
-  int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-  
-  if (tidx >= N)
-    return;
-
-  a[tidx] = 1.1;
 
 }
 
@@ -111,4 +105,40 @@ __global__ void sdaxpy(double *__restrict__ a, double *__restrict__ b, double *_
 
   a[tidx] =  a[tidx] + b[tidx] * c[tidx];
 
+}
+
+__device__ void warpReduce(volatile int* sdata, int tid){
+  // the aim is to save all the warps from useless work 
+  sdata[tid] += sdata[tid + 32];
+  sdata[tid] += sdata[tid + 16];
+  sdata[tid] += sdata[tid + 8];
+  sdata[tid] += sdata[tid + 4];
+  sdata[tid] += sdata[tid + 2];
+  sdata[tid] += sdata[tid + 1];
+}
+
+__global__ void sum(double *__restrict__ a, double *__restrict__ a_out, size_t N){
+    extern __shared__ int shared_data[];
+
+    unsigned int tidx = threadIdx.x;
+    unsigned int i = blockIdx.x*(blockDim.x*2) + threadIdx.x;
+    shared_data[tidx] = a[i] + a[i + blockDim.x];
+    __syncthreads();
+
+    for(int s = blockDim.x/2; s > 32; s >>= 1) { 
+
+        if (tidx < s){  
+            shared_data[tidx] += shared_data[tidx + s];
+        }
+        __syncthreads();
+    }
+
+    // Adding this to use warpReduce
+    if (tidx < 32){
+      warpReduce(shared_data, tidx);
+    }
+
+    if (tidx == 0){
+        a[blockIdx.x] = shared_data[0];
+    }
 }
