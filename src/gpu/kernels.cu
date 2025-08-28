@@ -116,6 +116,7 @@ __device__ void warpReduce(volatile int* shared_data, int tidx){
   shared_data[tidx] += shared_data[tidx + 1];
 }
 
+//Inspired by the https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
 __global__ void sum(double *__restrict__ a, double *__restrict__ a_out, size_t N){
     extern __shared__ int shared_data[];
 
