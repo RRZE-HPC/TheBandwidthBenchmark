@@ -107,14 +107,13 @@ __global__ void sdaxpy(double *__restrict__ a, double *__restrict__ b, double *_
 
 }
 
-__device__ void warpReduce(volatile int* sdata, int tid){
-  // the aim is to save all the warps from useless work 
-  sdata[tid] += sdata[tid + 32];
-  sdata[tid] += sdata[tid + 16];
-  sdata[tid] += sdata[tid + 8];
-  sdata[tid] += sdata[tid + 4];
-  sdata[tid] += sdata[tid + 2];
-  sdata[tid] += sdata[tid + 1];
+__device__ void warpReduce(volatile int* shared_data, int tidx){
+  shared_data[tidx] += shared_data[tidx + 32];
+  shared_data[tidx] += shared_data[tidx + 16];
+  shared_data[tidx] += shared_data[tidx + 8];
+  shared_data[tidx] += shared_data[tidx + 4];
+  shared_data[tidx] += shared_data[tidx + 2];
+  shared_data[tidx] += shared_data[tidx + 1];
 }
 
 __global__ void sum(double *__restrict__ a, double *__restrict__ a_out, size_t N){
@@ -133,7 +132,6 @@ __global__ void sum(double *__restrict__ a, double *__restrict__ a_out, size_t N
         __syncthreads();
     }
 
-    // Adding this to use warpReduce
     if (tidx < 32){
       warpReduce(shared_data, tidx);
     }
