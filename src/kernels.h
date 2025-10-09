@@ -5,6 +5,20 @@
 #ifndef __KERNELS_H_
 #define __KERNELS_H_
 
+#ifdef CUDA_TARGET
+extern "C" {
+
+double init(double* a, double scalar, int N);
+double sum(double* a, int N);
+double update(double* a, double scalar, int N);
+double copy(double* a, double* b, int N);
+double triad(double* a, double* b, double* c, double scalar, int N);
+double striad(double* a, double* b, double* c, double* d, int N);
+double daxpy(double* a, double* b, double scalar, int N);
+double sdaxpy(double* a, double* b, double* c, int N);
+}
+
+#else
 extern double init(double* a, double scalar, int N);
 extern double sum(double* a, int N);
 extern double update(double* a, double scalar, int N);
@@ -35,4 +49,6 @@ extern double striad_tp(
     double* a, double* b, double* c, double* d, int N, int iter);
 extern double daxpy_tp(double* a, double* b, double scalar, int N, int iter);
 extern double sdaxpy_tp(double* a, double* b, double* c, int N, int iter);
+
+#endif
 #endif
