@@ -20,7 +20,7 @@ INCLUDES  += -I$(SRC_DIR)/includes -I$(BUILD_DIR)
 
 VPATH     = $(SRC_DIR)
 ASM       = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.s,$(wildcard $(SRC_DIR)/*.c))
-OBJ       = $(filter-out $(BUILD_DIR)/kernels-%.c,$(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c)))
+OBJ       = $(filter-out $(BUILD_DIR)/kernels-%.o,$(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.c)))
 ifeq ($(strip $(TOOLCHAIN)),NVCC)
 OBJ      += $(patsubst $(SRC_DIR)/%.cu, $(BUILD_DIR)/%.o,$(wildcard $(SRC_DIR)/*.cu))
 else
@@ -60,14 +60,14 @@ $(BUILD_DIR)/%.s:  %.c
 clean:
 	$(info ===>  CLEAN)
 	@rm -rf $(BUILD_DIR)
-	@rm -rf $(DATA_DIR)
-	@rm -rf $(PLOTS_DIR)
 
 distclean:
 	$(info ===>  DIST CLEAN)
 	@rm -rf build
 	@rm -f $(TARGET)
-	@rm -f .clangd
+	@rm -rf $(DATA_DIR)
+	@rm -rf $(PLOTS_DIR)
+	@rm -f .clangd compile_commands.json
 
 info:
 	$(info $(CFLAGS))
