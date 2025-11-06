@@ -15,7 +15,6 @@
 #endif
 
 #include "affinity.h"
-#include "allocate.h"
 #include "kernels.h"
 #include "profiler.h"
 #include "util.h"
@@ -43,11 +42,6 @@ int main(int argc, char** argv)
   int index;
 
   profilerInit();
-
-  a = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  b = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  c = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  d = (double*)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
 
   int co;
   opterr = 0;
@@ -124,16 +118,12 @@ int main(int argc, char** argv)
   _SEQ = 1;
 #endif
 
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < N; i++) {
-    a[i] = 2.0;
-    b[i] = 2.0;
-    c[i] = 0.5;
-    d[i] = 1.0;
-  }
+  allocateArrays(&a, &b, &c, &d, N);
+  initArrays(a, b, c, d, N);
 
   double scalar = 0.1;
 
+#ifndef _NVCC
   if (type == TP || type == SQ) {
     printf("Running memory hierarchy sweeps\n");
 
@@ -170,6 +160,7 @@ int main(int argc, char** argv)
     }
     exit(EXIT_SUCCESS);
   }
+#endif
 
   for (int k = 0; k < NTIMES; k++) {
     PROFILE(INIT, init(b, scalar, N));
@@ -261,6 +252,7 @@ void check(double* a, double* b, double* c, double* d, int N)
   }
 }
 
+#ifndef _NVCC
 void kernelSwitch(double* restrict a,
     double* restrict b,
     double* restrict c,
@@ -368,3 +360,4 @@ void kernelSwitch(double* restrict a,
     break;
   }
 }
+#endif

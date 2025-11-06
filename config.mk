@@ -1,4 +1,4 @@
-# Supported: GCC, CLANG, ICC, ICX
+# Supported: GCC, CLANG, ICX, NVCC
 TOOLCHAIN ?= CLANG
 ENABLE_OPENMP ?= true
 ENABLE_LIKWID ?= false

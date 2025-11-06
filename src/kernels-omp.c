@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "allocate.h"
 #include "kernels.h"
 #include "timing.h"
 
@@ -17,6 +18,26 @@
   }                                                                            \
   E = getTimeStamp();                                                          \
   return E - S;
+
+void allocateArrays(double** a, double** b, double** c, double** d, size_t N)
+{
+  *a = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *b = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *c = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *d = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+}
+
+void initArrays(double* a, double* b, double* c, double* d, int N)
+{
+
+#pragma omp parallel for schedule(static)
+  for (int i = 0; i < N; i++) {
+    a[i] = 2.0;
+    b[i] = 2.0;
+    c[i] = 0.5;
+    d[i] = 1.0;
+  }
+}
 
 double init(double* restrict a, double scalar, int N) { HARNESS(a[i] = scalar) }
 
