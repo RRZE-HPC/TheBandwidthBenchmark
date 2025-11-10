@@ -12,14 +12,15 @@
 #define HARNESS(kernel)                                                        \
   double S, E;                                                                 \
   S = getTimeStamp();                                                          \
-  _Pragma("omp parallel for schedule(static)") for (int i = 0; i < N; i++)     \
+  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; i++)  \
   {                                                                            \
     kernel;                                                                    \
   }                                                                            \
   E = getTimeStamp();                                                          \
   return E - S;
 
-void allocateArrays(double** a, double** b, double** c, double** d, size_t N)
+void allocateArrays(
+    double** a, double** b, double** c, double** d, const size_t N)
 {
   *a = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
   *b = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
@@ -27,11 +28,11 @@ void allocateArrays(double** a, double** b, double** c, double** d, size_t N)
   *d = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
 }
 
-void initArrays(double* a, double* b, double* c, double* d, int N)
+void initArrays(double* a, double* b, double* c, double* d, const size_t N)
 {
 
 #pragma omp parallel for schedule(static)
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; i++) {
     a[i] = 2.0;
     b[i] = 2.0;
     c[i] = 0.5;
@@ -39,16 +40,19 @@ void initArrays(double* a, double* b, double* c, double* d, int N)
   }
 }
 
-double init(double* restrict a, double scalar, int N) { HARNESS(a[i] = scalar) }
+double init(double* restrict a, const double scalar, const size_t N)
+{
+  HARNESS(a[i] = scalar)
+}
 
-double sum(double* restrict a, int N)
+double sum(double* restrict a, const size_t N)
 {
   double S, E;
   double sum = 0.0;
 
   S = getTimeStamp();
 #pragma omp parallel for reduction(+ : sum) schedule(static)
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; i++) {
     sum += a[i];
   }
   E = getTimeStamp();
@@ -59,12 +63,12 @@ double sum(double* restrict a, int N)
   return E - S;
 }
 
-double update(double* restrict a, double scalar, int N)
+double update(double* restrict a, const double scalar, const size_t N)
 {
   HARNESS(a[i] = a[i] * scalar)
 }
 
-double copy(double* restrict a, double* restrict b, int N)
+double copy(double* restrict a, double* restrict b, const size_t N)
 {
   HARNESS(a[i] = b[i])
 }
@@ -72,8 +76,8 @@ double copy(double* restrict a, double* restrict b, int N)
 double triad(double* restrict a,
     double* restrict b,
     double* restrict c,
-    double scalar,
-    int N)
+    const double scalar,
+    const size_t N)
 {
   HARNESS(a[i] = b[i] + scalar * c[i])
 }
@@ -82,17 +86,19 @@ double striad(double* restrict a,
     double* restrict b,
     double* restrict c,
     double* restrict d,
-    int N)
+    const size_t N)
 {
   HARNESS(a[i] = b[i] + d[i] * c[i])
 }
 
-double daxpy(double* restrict a, double* restrict b, double scalar, int N)
+double daxpy(
+    double* restrict a, double* restrict b, const double scalar, const size_t N)
 {
   HARNESS(a[i] = a[i] + scalar * b[i])
 }
 
-double sdaxpy(double* restrict a, double* restrict b, double* restrict c, int N)
+double sdaxpy(
+    double* restrict a, double* restrict b, double* restrict c, const size_t N)
 {
   HARNESS(a[i] = a[i] + b[i] * c[i])
 }

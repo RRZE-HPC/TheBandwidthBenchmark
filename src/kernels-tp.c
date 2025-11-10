@@ -15,8 +15,8 @@
   {                                                                            \
     double* al = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));       \
     _Pragma("omp single") S = getTimeStamp();                                  \
-    for (int j = 0; j < iter; j++) {                                           \
-      _Pragma("omp simd") for (int i = 0; i < N; i++) { kernel; }              \
+    for (size_t j = 0; j < iter; j++) {                                        \
+      _Pragma("omp simd") for (size_t i = 0; i < N; i++) { kernel; }           \
       if (al[N - 1] < 0.0) printf("Ai = %f\n", al[N - 1]);                     \
     }                                                                          \
     _Pragma("omp single") E = getTimeStamp();                                  \
@@ -24,17 +24,20 @@
   }                                                                            \
   return E - S;
 
-double init_tp(double* restrict a, double scalar, int N, int iter)
+double init_tp(
+    double* restrict a, const double scalar, const size_t N, const size_t iter)
 {
   HARNESS(al[i] = scalar)
 }
 
-double update_tp(double* restrict a, double scalar, int N, int iter)
+double update_tp(
+    double* restrict a, const double scalar, const size_t N, const size_t iter)
 {
   HARNESS(al[i] = a[i] * scalar)
 }
 
-double copy_tp(double* restrict a, double* restrict b, int N, int iter)
+double copy_tp(
+    double* restrict a, double* restrict b, const size_t N, const size_t iter)
 {
   HARNESS(al[i] = b[i])
 }
@@ -42,9 +45,9 @@ double copy_tp(double* restrict a, double* restrict b, int N, int iter)
 double triad_tp(double* restrict a,
     double* restrict b,
     double* restrict c,
-    double scalar,
-    int N,
-    int iter)
+    const double scalar,
+    const size_t N,
+    const size_t iter)
 {
   HARNESS(al[i] = b[i] + scalar * c[i])
 }
@@ -53,37 +56,43 @@ double striad_tp(double* restrict a,
     double* restrict b,
     double* restrict c,
     double* restrict d,
-    int N,
-    int iter)
+    const size_t N,
+    const size_t iter)
 {
   HARNESS(al[i] = b[i] + d[i] * c[i])
 }
 
-double daxpy_tp(
-    double* restrict a, double* restrict b, double scalar, int N, int iter)
+double daxpy_tp(double* restrict a,
+    double* restrict b,
+    const double scalar,
+    const size_t N,
+    const size_t iter)
 {
   HARNESS(al[i] = a[i] + scalar * b[i])
 }
 
-double sdaxpy_tp(
-    double* restrict a, double* restrict b, double* restrict c, int N, int iter)
+double sdaxpy_tp(double* restrict a,
+    double* restrict b,
+    double* restrict c,
+    const size_t N,
+    const size_t iter)
 {
   HARNESS(al[i] = a[i] + b[i] * c[i])
 }
 
-double sum_tp(double* restrict a, int N, int iter)
+double sum_tp(double* restrict a, const size_t N, const size_t iter)
 {
   double S, E;
 
   _Pragma("omp parallel")
   {
     double* al = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
-    _Pragma("omp simd") for (int i = 0; i < N; i++) { al[i] = a[i]; }
+    _Pragma("omp simd") for (size_t i = 0; i < N; i++) { al[i] = a[i]; }
     double sum = 0.0;
 
     _Pragma("omp single") S = getTimeStamp();
-    for (int j = 0; j < iter; j++) {
-      _Pragma("omp simd") for (int i = 0; i < N; i++) { sum += al[i]; }
+    for (size_t j = 0; j < iter; j++) {
+      _Pragma("omp simd") for (size_t i = 0; i < N; i++) { sum += al[i]; }
       al[N / 2] += sum;
     }
     _Pragma("omp single") E = getTimeStamp();

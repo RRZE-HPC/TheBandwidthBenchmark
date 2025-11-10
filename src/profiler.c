@@ -75,7 +75,7 @@ void profilerOpenFile(int region) {
             _regions[region].words);
     fprintf(
         profilerFile,
-        "# N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  "
+        "# N  Bytes(MB)  Rate(GB/s)  Rate(GFlop/s)  Avg time(s)  Min time(s)  "
         "Max time(s)\n");
   }
 
@@ -105,7 +105,7 @@ void profilerPrintLine(size_t N, int iter, int j) {
   if (flops > 0) {
     fprintf(profilerFile, "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
             N, 1.0E-06 * bytes, 1.0E-09 * bytes * iter / mintime,
-            1.0E-06 * flops / mintime, avgtime, mintime, maxtime);
+            1.0E-09 * flops / mintime, avgtime, mintime, maxtime);
   }
   // N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)
   else {
@@ -129,7 +129,7 @@ void profilerPrint(size_t N) {
 #endif
 
   printf(HLINE);
-  printf("Function      Rate(MB/s)  Rate(MFlop/s)  Avg time     Min time     "
+  printf("Function      Rate(GB/s)  Rate(GFlop/s)  Avg time     Min time     "
          "Max time\n");
 
   for (int j = 0; j < NUMREGIONS; j++) {
@@ -139,11 +139,11 @@ void profilerPrint(size_t N) {
 
     if (flops > 0) {
       printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n", _regions[j].label,
-             1.0E-06 * bytes / mintime, 1.0E-06 * flops / mintime, avgtime,
+             1.0E-09 * bytes / mintime, 1.0E-09 * flops / mintime, avgtime,
              mintime, maxtime);
     } else {
       printf("%-12s%11.2f      -      %11.4f  %11.4f  %11.4f\n",
-             _regions[j].label, 1.0E-06 * bytes / mintime, avgtime, mintime,
+             _regions[j].label, 1.0E-09 * bytes / mintime, avgtime, mintime,
              maxtime);
     }
   }

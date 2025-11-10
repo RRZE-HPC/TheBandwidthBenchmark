@@ -1,4 +1,5 @@
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,7 @@ extern "C" {
 #include "timing.h"
 static int getSharedMemSize(
     int thread_block_size, int thread_blocks_per_sm, const void* func);
+static void setBlockSize();
 }
 
 #define GPU_ERROR(ans)                                                         \
@@ -48,9 +50,21 @@ __global__ void init_all(double* __restrict__ a,
   b[tidx] = 2.0;
   c[tidx] = 0.5;
   d[tidx] = 1.0;
+
+  // Declare and initialize RNG state
+  // curandState state;
+  // curand_init(123456879ll,
+  //     tidx,
+  //     0,
+  //     &state); // seed, sequence number, offset, &state
+
+  // a[tidx] = (double)curand_uniform(&state);
+  // b[tidx] = (double)curand_uniform(&state);
+  // c[tidx] = (double)curand_uniform(&state);
+  // d[tidx] = (double)curand_uniform(&state);
 }
 
-__global__ void initCuda(double* __restrict__ b, int scalar, size_t N)
+__global__ void initCuda(double* __restrict__ b, int scalar, const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -61,7 +75,7 @@ __global__ void initCuda(double* __restrict__ b, int scalar, size_t N)
 }
 
 __global__ void copyCuda(
-    double* __restrict__ c, double* __restrict__ a, size_t N)
+    double* __restrict__ c, double* __restrict__ a, const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -71,7 +85,7 @@ __global__ void copyCuda(
   c[tidx] = a[tidx];
 }
 
-__global__ void updateCuda(double* __restrict__ a, int scalar, size_t N)
+__global__ void updateCuda(double* __restrict__ a, int scalar, const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -84,8 +98,8 @@ __global__ void updateCuda(double* __restrict__ a, int scalar, size_t N)
 __global__ void triadCuda(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
-    int scalar,
-    size_t N)
+    const int scalar,
+    const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -95,8 +109,10 @@ __global__ void triadCuda(double* __restrict__ a,
   a[tidx] = b[tidx] + scalar * c[tidx];
 }
 
-__global__ void daxpyCuda(
-    double* __restrict__ a, double* __restrict__ b, int scalar, size_t N)
+__global__ void daxpyCuda(double* __restrict__ a,
+    double* __restrict__ b,
+    const int scalar,
+    const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -110,7 +126,7 @@ __global__ void striadCuda(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
     double* __restrict__ d,
-    size_t N)
+    const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -123,7 +139,7 @@ __global__ void striadCuda(double* __restrict__ a,
 __global__ void sdaxpyCuda(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
-    size_t N)
+    const size_t N)
 {
 
   int tidx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -146,7 +162,7 @@ __device__ void warpReduce(volatile int* shared_data, int tidx)
 // Inspired by the
 // https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
 __global__ void sumCuda(
-    double* __restrict__ a, double* __restrict__ a_out, size_t N)
+    double* __restrict__ a, double* __restrict__ a_out, const size_t N)
 {
   extern __shared__ int shared_data[];
 
@@ -188,7 +204,8 @@ __global__ void sumCuda(
   return E - S;
 
 extern "C" {
-void allocateArrays(double** a, double** b, double** c, double** d, size_t N)
+void allocateArrays(
+    double** a, double** b, double** c, double** d, const size_t N)
 {
   GPU_ERROR(cudaSetDevice(0));
   GPU_ERROR(cudaFree(0));
@@ -203,104 +220,116 @@ void initArrays(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
     double* __restrict__ d,
-    size_t N)
+    const size_t N)
 {
   GPU_ERROR(cudaSetDevice(0));
   GPU_ERROR(cudaFree(0));
+
+  setBlockSize();
 
   init_all<<<N / thread_block_size + 1, thread_block_size>>>(a, b, c, d, N);
 
   GPU_ERROR(cudaDeviceSynchronize());
 }
 
-double init(double* __restrict__ b, int scalar, size_t N)
+double init(double* __restrict__ b, double scalar, const size_t N)
 {
-
-  HARNESS((initCuda<<<N / thread_block_size + 1,
-                  thread_block_size,
-                  shared_mem_size>>>(b, scalar, N)),
-      init)
+  HARNESS((initCuda<<<N / thread_block_size + 1, thread_block_size, 0>>>(b,
+              scalar,
+              N)),
+      initCuda)
 }
 
-double copy(double* __restrict__ c, double* __restrict__ a, size_t N)
+double copy(double* __restrict__ c, double* __restrict__ a, const size_t N)
 {
 
   HARNESS((copyCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(c, a, N)),
-      copy)
+      copyCuda)
 }
 
-double update(double* __restrict__ a, int scalar, size_t N)
+double update(double* __restrict__ a, double scalar, const size_t N)
 {
 
   HARNESS((updateCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(a, scalar, N)),
-      update)
+      updateCuda)
 }
 
 double triad(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
-    int scalar,
-    size_t N)
+    const double scalar,
+    const size_t N)
 {
 
   HARNESS((triadCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(a, b, c, scalar, N)),
-      triad)
+      triadCuda)
 }
 
-double daxpy(
-    double* __restrict__ a, double* __restrict__ b, int scalar, size_t N)
+double daxpy(double* __restrict__ a,
+    double* __restrict__ b,
+    const double scalar,
+    const size_t N)
 {
 
   HARNESS((daxpyCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(a, b, scalar, N)),
-      daxpy)
+      daxpyCuda)
 }
 
 double striad(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
     double* __restrict__ d,
-    size_t N)
+    const size_t N)
 {
 
   HARNESS((striadCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(a, b, c, d, N)),
-      striad)
+      striadCuda)
 }
 
 double sdaxpy(double* __restrict__ a,
     double* __restrict__ b,
     double* __restrict__ c,
-    size_t N)
+    const size_t N)
 {
 
   HARNESS((sdaxpyCuda<<<N / thread_block_size + 1,
                   thread_block_size,
                   shared_mem_size>>>(a, b, c, N)),
-      sdaxpy)
+      sdaxpyCuda)
 }
 
-double sum(double* __restrict__ a, size_t N)
+double sum(double* __restrict__ a, const size_t N)
 {
   GPU_ERROR(cudaSetDevice(0));
   GPU_ERROR(cudaFree(0));
+
   double* a_out;
+
   GPU_ERROR(cudaMalloc(&a_out,
       (N + (thread_block_size - 1)) / thread_block_size * sizeof(double)));
+
   double S = getTimeStamp();
+
   sumCuda<<<N / (thread_block_size * 2) + 1,
       thread_block_size,
       thread_block_size * sizeof(double)>>>(a, a_out, N);
+
   GPU_ERROR(cudaDeviceSynchronize());
+
   double E = getTimeStamp();
+
+  GPU_ERROR(cudaFree(a_out));
+
   return E - S;
 }
 
@@ -315,7 +344,7 @@ void setBlockSize()
   // Not the best case for thread_block_size.
   // Varying thread_block_size can result in
   // better performance and thread occupancy.
-  thread_block_size = max_thread_block_size;
+  thread_block_size = prop.maxThreadsPerMultiProcessor / 2;
 
 #ifdef THREADBLOCKSIZE
   thread_block_size = THREADBLOCKSIZE;

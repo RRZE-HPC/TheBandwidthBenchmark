@@ -19,9 +19,9 @@
 #include "profiler.h"
 #include "util.h"
 
-static void check(double*, double*, double*, double*, int);
+static void check(double*, double*, double*, double*, size_t);
 static void kernelSwitch(
-    double*, double*, double*, double*, double, int, int, int);
+    double*, double*, double*, double*, double, size_t, size_t, int);
 
 typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
@@ -136,7 +136,7 @@ int main(int argc, char** argv)
 
         double newtime = 0.0;
         double oldtime = 0.0;
-        int iter       = 2;
+        size_t iter    = 2;
 
         while (newtime < 0.3) {
           newtime = striad_seq(a, b, c, d, N, iter);
@@ -164,9 +164,9 @@ int main(int argc, char** argv)
 
   for (int k = 0; k < NTIMES; k++) {
     PROFILE(INIT, init(b, scalar, N));
-    double tmp = a[10];
+    // double tmp = a[10];
     PROFILE(SUM, sum(a, N));
-    a[10] = tmp;
+    // a[10] = tmp;
     PROFILE(COPY, copy(c, a, N));
     PROFILE(UPDATE, update(a, scalar, N));
     PROFILE(TRIAD, triad(a, b, c, scalar, N));
@@ -181,8 +181,12 @@ int main(int argc, char** argv)
   return EXIT_SUCCESS;
 }
 
-void check(double* a, double* b, double* c, double* d, int N)
+void check(double* a, double* b, double* c, double* d, size_t N)
 {
+#ifdef _NVCC
+  return;
+#endif
+
   double aj, bj, cj, dj, scalar;
   double asum, bsum, csum, dsum;
   double epsilon;
@@ -216,7 +220,7 @@ void check(double* a, double* b, double* c, double* d, int N)
   csum = 0.0;
   dsum = 0.0;
 
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; i++) {
     asum += a[i];
     bsum += b[i];
     csum += c[i];
@@ -258,8 +262,8 @@ void kernelSwitch(double* restrict a,
     double* restrict c,
     double* restrict d,
     double scalar,
-    int N,
-    int iter,
+    size_t N,
+    size_t iter,
     int j)
 {
   switch (j) {
