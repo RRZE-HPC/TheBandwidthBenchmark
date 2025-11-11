@@ -2,54 +2,101 @@
  * All rights reserved. This file is part of TheBandwidthBenchmark.
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
+#include <ctype.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 #include "affinity.h"
-#include "allocate.h"
 #include "kernels.h"
 #include "profiler.h"
 #include "util.h"
 
-static void check(double *, double *, double *, double *, int);
-static void kernelSwitch(double *, double *, double *, double *, double, int,
-                         int, int);
+static void check(double*, double*, double*, double*, size_t);
+static void kernelSwitch(
+    double*, double*, double*, double*, double, size_t, size_t, int);
 
-int main(int argc, char **argv) {
+typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
+
+#define HELPTEXT                                                               \
+  "Usage: bwBench [options]\n\n"                                               \
+  "Options:\n"                                                                 \
+  "  -h         Show this help text\n"                                         \
+  "  -m <type>   Benchmark type, can be ws (default), tp, or seq.\n"           \
+  "  -s <int>   Size in GB for allocated vectors\n"
+
+int main(int argc, char** argv)
+{
   size_t bytesPerWord = sizeof(double);
-  size_t N = SIZE;
+  size_t N            = SIZE;
   double *a, *b, *c, *d;
-  char *type = "ws";
-
-  if (argc > 1 && !strcmp(argv[1], "tp")) {
-    type = "tp";
-    _SEQ = 0;
-  } else if (argc > 1 && !strcmp(argv[1], "seq")) {
-    type = "seq";
-    _SEQ = 1;
-  }
+  int type  = WS;
+  bool stop = false;
+  int index;
 
   profilerInit();
 
-  a = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  b = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  c = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
-  d = (double *)allocate(ARRAY_ALIGNMENT, N * bytesPerWord);
+  int co;
+  opterr = 0;
+
+  while ((co = getopt(argc, argv, "h:m:s:")) != -1)
+    switch (co) {
+    case 'h':
+      printf(HELPTEXT);
+      exit(EXIT_SUCCESS);
+      break;
+    case 'm':
+      if (strcmp(optarg, "ws") == 0) type = WS;
+      else if (strcmp(optarg, "tp") == 0) {
+        type = TP;
+        _SEQ = 0;
+      } else if (strcmp(optarg, "seq") == 0) {
+        type = SQ;
+        _SEQ = 1;
+      } else {
+        printf("Unknown bench type %s\n", optarg);
+        return 1;
+      }
+      break;
+    case 's':
+      break;
+    case '?':
+      if (optopt == 'c')
+        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+      else if (isprint(optopt))
+        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+      else
+        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+      return 1;
+    default:
+      abort();
+    }
+
+  for (index = optind; index < argc; index++) {
+    printf("Non-option argument %s\n", argv[index]);
+  }
+
+  if (stop) {
+    printf("Wrong command line arguments\n");
+  }
 
   printf("\n");
   printf(BANNER);
   printf(HLINE);
   printf("Total allocated datasize: %8.2f MB\n",
-         4.0 * bytesPerWord * N * 1.0E-06);
+      4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
   printf(HLINE);
-  _Pragma("omp parallel") {
+  _Pragma("omp parallel")
+  {
     int k = omp_get_num_threads();
     int i = omp_get_thread_num();
 
@@ -60,8 +107,9 @@ int main(int argc, char **argv) {
 #pragma omp barrier
 #pragma omp critical
     {
-      printf("Thread %d running on processor %d\n", i,
-             affinity_getProcessorId());
+      printf("Thread %d running on processor %d\n",
+          i,
+          affinity_getProcessorId());
       affinity_getmask();
     }
 #endif
@@ -70,17 +118,13 @@ int main(int argc, char **argv) {
   _SEQ = 1;
 #endif
 
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < N; i++) {
-    a[i] = 2.0;
-    b[i] = 2.0;
-    c[i] = 0.5;
-    d[i] = 1.0;
-  }
+  allocateArrays(&a, &b, &c, &d, N);
+  initArrays(a, b, c, d, N);
 
   double scalar = 0.1;
 
-  if (!strcmp(type, "tp") || !strcmp(type, "seq")) {
+#ifndef _NVCC
+  if (type == TP || type == SQ) {
     printf("Running memory hierarchy sweeps\n");
 
     for (int j = 0; j < NUMREGIONS; j++) {
@@ -92,7 +136,7 @@ int main(int argc, char **argv) {
 
         double newtime = 0.0;
         double oldtime = 0.0;
-        int iter = 2;
+        size_t iter    = 2;
 
         while (newtime < 0.3) {
           newtime = striad_seq(a, b, c, d, N, iter);
@@ -116,12 +160,13 @@ int main(int argc, char **argv) {
     }
     exit(EXIT_SUCCESS);
   }
+#endif
 
   for (int k = 0; k < NTIMES; k++) {
     PROFILE(INIT, init(b, scalar, N));
-    double tmp = a[10];
+    // double tmp = a[10];
     PROFILE(SUM, sum(a, N));
-    a[10] = tmp;
+    // a[10] = tmp;
     PROFILE(COPY, copy(c, a, N));
     PROFILE(UPDATE, update(a, scalar, N));
     PROFILE(TRIAD, triad(a, b, c, scalar, N));
@@ -136,7 +181,12 @@ int main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-void check(double *a, double *b, double *c, double *d, int N) {
+void check(double* a, double* b, double* c, double* d, size_t N)
+{
+#ifdef _NVCC
+  return;
+#endif
+
   double aj, bj, cj, dj, scalar;
   double asum, bsum, csum, dsum;
   double epsilon;
@@ -170,7 +220,7 @@ void check(double *a, double *b, double *c, double *d, int N) {
   csum = 0.0;
   dsum = 0.0;
 
-  for (int i = 0; i < N; i++) {
+  for (size_t i = 0; i < N; i++) {
     asum += a[i];
     bsum += b[i];
     csum += c[i];
@@ -206,8 +256,16 @@ void check(double *a, double *b, double *c, double *d, int N) {
   }
 }
 
-void kernelSwitch(double *restrict a, double *restrict b, double *restrict c,
-                  double *restrict d, double scalar, int N, int iter, int j) {
+#ifndef _NVCC
+void kernelSwitch(double* restrict a,
+    double* restrict b,
+    double* restrict c,
+    double* restrict d,
+    double scalar,
+    size_t N,
+    size_t iter,
+    int j)
+{
   switch (j) {
   case INIT:
     if (_SEQ) {
@@ -306,3 +364,4 @@ void kernelSwitch(double *restrict a, double *restrict b, double *restrict c,
     break;
   }
 }
+#endif
