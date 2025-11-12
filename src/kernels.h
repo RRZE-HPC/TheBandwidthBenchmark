@@ -18,22 +18,16 @@ extern double triad(
     double* a, double* b, double* c, const double scalar, const size_t N);
 extern double striad(
     double* a, double* b, double* c, double* d, const size_t N);
-extern double daxpy(
-    double* a, double* b, const double scalar, const size_t N);
+extern double daxpy(double* a, double* b, const double scalar, const size_t N);
 extern double sdaxpy(double* a, double* b, double* c, const size_t N);
 
 #ifndef _NVCC
-extern double init_seq(double* a,
-    const double scalar,
-    const size_t N,
-    const size_t iter);
-extern double update_seq(double* a,
-    const double scalar,
-    const size_t N,
-    const size_t iter);
+extern double init_seq(
+    double* a, const double scalar, const size_t N, const size_t iter);
+extern double update_seq(
+    double* a, const double scalar, const size_t N, const size_t iter);
 extern double sum_seq(double* a, const size_t N, const size_t iter);
-extern double copy_seq(
-    double* a, double* b, const size_t N, const size_t iter);
+extern double copy_seq(double* a, double* b, const size_t N, const size_t iter);
 extern double triad_seq(double* a,
     double* b,
     double* c,
@@ -51,23 +45,15 @@ extern double daxpy_seq(double* a,
     const double scalar,
     const size_t N,
     const size_t iter);
-extern double sdaxpy_seq(double* a,
-    double* b,
-    double* c,
-    const size_t N,
-    const size_t iter);
+extern double sdaxpy_seq(
+    double* a, double* b, double* c, const size_t N, const size_t iter);
 
-extern double init_tp(double* a,
-    const double scalar,
-    const size_t N,
-    const size_t iter);
-extern double update_tp(double* a,
-    const double scalar,
-    const size_t N,
-    const size_t iter);
+extern double init_tp(
+    double* a, const double scalar, const size_t N, const size_t iter);
+extern double update_tp(
+    double* a, const double scalar, const size_t N, const size_t iter);
 extern double sum_tp(double* a, const size_t N, const size_t iter);
-extern double copy_tp(
-    double* a, double* b, const size_t N, const size_t iter);
+extern double copy_tp(double* a, double* b, const size_t N, const size_t iter);
 extern double triad_tp(double* a,
     double* b,
     double* c,
@@ -85,10 +71,7 @@ extern double daxpy_tp(double* a,
     const double scalar,
     const size_t N,
     const size_t iter);
-extern double sdaxpy_tp(double* a,
-    double* b,
-    double* c,
-    const size_t N,
-    const size_t iter);
+extern double sdaxpy_tp(
+    double* a, double* b, double* c, const size_t N, const size_t iter);
 #endif
 #endif

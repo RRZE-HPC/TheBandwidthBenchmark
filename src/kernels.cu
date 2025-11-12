@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int CUDA_DEVICE = 0;
+
 extern "C" {
 #include "timing.h"
 static int getSharedMemSize(
@@ -46,22 +48,22 @@ __global__ void init_all(double* __restrict__ a,
 
   if (tidx >= N) return;
 
-  a[tidx] = 2.0;
-  b[tidx] = 2.0;
-  c[tidx] = 0.5;
-  d[tidx] = 1.0;
+  // a[tidx] = 2.0;
+  // b[tidx] = 2.0;
+  // c[tidx] = 0.5;
+  // d[tidx] = 1.0;
 
   // Declare and initialize RNG state
-  // curandState state;
-  // curand_init(123456879ll,
-  //     tidx,
-  //     0,
-  //     &state); // seed, sequence number, offset, &state
+  curandState state;
+  curand_init(123456879ll,
+      tidx,
+      0,
+      &state); // seed, sequence number, offset, &state
 
-  // a[tidx] = (double)curand_uniform(&state);
-  // b[tidx] = (double)curand_uniform(&state);
-  // c[tidx] = (double)curand_uniform(&state);
-  // d[tidx] = (double)curand_uniform(&state);
+  a[tidx] = (double)curand_uniform(&state);
+  b[tidx] = (double)curand_uniform(&state);
+  c[tidx] = (double)curand_uniform(&state);
+  d[tidx] = (double)curand_uniform(&state);
 }
 
 __global__ void initCuda(double* __restrict__ b, int scalar, const size_t N)
@@ -195,7 +197,7 @@ __global__ void sumCuda(
 
 #define HARNESS(kernel, kernel_name)                                           \
   int shared_mem_size = SHARED_MEM(kernel_name);                               \
-  GPU_ERROR(cudaSetDevice(0));                                                 \
+  GPU_ERROR(cudaSetDevice(CUDA_DEVICE));                                       \
   GPU_ERROR(cudaFree(0));                                                      \
   double S = getTimeStamp();                                                   \
   kernel;                                                                      \
@@ -207,7 +209,7 @@ extern "C" {
 void allocateArrays(
     double** a, double** b, double** c, double** d, const size_t N)
 {
-  GPU_ERROR(cudaSetDevice(0));
+  GPU_ERROR(cudaSetDevice(CUDA_DEVICE));
   GPU_ERROR(cudaFree(0));
 
   GPU_ERROR(cudaMalloc((void**)a, N * sizeof(double)));
@@ -222,7 +224,7 @@ void initArrays(double* __restrict__ a,
     double* __restrict__ d,
     const size_t N)
 {
-  GPU_ERROR(cudaSetDevice(0));
+  GPU_ERROR(cudaSetDevice(CUDA_DEVICE));
   GPU_ERROR(cudaFree(0));
 
   setBlockSize();
@@ -310,7 +312,7 @@ double sdaxpy(double* __restrict__ a,
 
 double sum(double* __restrict__ a, const size_t N)
 {
-  GPU_ERROR(cudaSetDevice(0));
+  GPU_ERROR(cudaSetDevice(CUDA_DEVICE));
   GPU_ERROR(cudaFree(0));
 
   double* a_out;

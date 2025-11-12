@@ -3,6 +3,8 @@
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -14,78 +16,32 @@
 #include <omp.h>
 #endif
 
+#ifdef _NVCC
+extern int CUDA_DEVICE;
+#endif
+
 #include "affinity.h"
+#include "cli.h"
 #include "kernels.h"
 #include "profiler.h"
 #include "util.h"
 
-static void check(double*, double*, double*, double*, size_t);
+static void check(double*, double*, double*, double*, size_t, size_t);
 static void kernelSwitch(
-    double*, double*, double*, double*, double, size_t, size_t, int);
+    double*, double*, double*, double*, double, size_t, size_t, size_t, int);
 
-typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
-
-#define HELPTEXT                                                               \
-  "Usage: bwBench [options]\n\n"                                               \
-  "Options:\n"                                                                 \
-  "  -h         Show this help text\n"                                         \
-  "  -m <type>   Benchmark type, can be ws (default), tp, or seq.\n"           \
-  "  -s <int>   Size in GB for allocated vectors\n"
+int type = WS;
 
 int main(int argc, char** argv)
 {
   size_t bytesPerWord = sizeof(double);
   size_t N            = SIZE;
+  size_t ITERS        = NTIMES;
   double *a, *b, *c, *d;
-  int type  = WS;
-  bool stop = false;
-  int index;
 
   profilerInit();
 
-  int co;
-  opterr = 0;
-
-  while ((co = getopt(argc, argv, "h:m:s:")) != -1)
-    switch (co) {
-    case 'h':
-      printf(HELPTEXT);
-      exit(EXIT_SUCCESS);
-      break;
-    case 'm':
-      if (strcmp(optarg, "ws") == 0) type = WS;
-      else if (strcmp(optarg, "tp") == 0) {
-        type = TP;
-        _SEQ = 0;
-      } else if (strcmp(optarg, "seq") == 0) {
-        type = SQ;
-        _SEQ = 1;
-      } else {
-        printf("Unknown bench type %s\n", optarg);
-        return 1;
-      }
-      break;
-    case 's':
-      break;
-    case '?':
-      if (optopt == 'c')
-        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-      else if (isprint(optopt))
-        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-      else
-        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-      return 1;
-    default:
-      abort();
-    }
-
-  for (index = optind; index < argc; index++) {
-    printf("Non-option argument %s\n", argv[index]);
-  }
-
-  if (stop) {
-    printf("Wrong command line arguments\n");
-  }
+  parseCommandLineArguments(argc, argv, &N, &ITERS);
 
   printf("\n");
   printf(BANNER);
@@ -150,7 +106,7 @@ int main(int argc, char** argv)
           }
         }
 
-        kernelSwitch(a, b, c, d, scalar, N, iter, j);
+        kernelSwitch(a, b, c, d, scalar, N, ITERS, iter, j);
 
         profilerPrintLine(N, iter, j);
         N = ((double)N * 1.2);
@@ -162,7 +118,7 @@ int main(int argc, char** argv)
   }
 #endif
 
-  for (int k = 0; k < NTIMES; k++) {
+  for (int k = 0; k < ITERS; k++) {
     PROFILE(INIT, init(b, scalar, N));
     // double tmp = a[10];
     PROFILE(SUM, sum(a, N));
@@ -175,13 +131,13 @@ int main(int argc, char** argv)
     PROFILE(SDAXPY, sdaxpy(a, b, c, N));
   }
   // FIXME: Adopt to new values
-  check(a, b, c, d, N);
+  check(a, b, c, d, N, ITERS);
   profilerPrint(N);
 
   return EXIT_SUCCESS;
 }
 
-void check(double* a, double* b, double* c, double* d, size_t N)
+void check(double* a, double* b, double* c, double* d, size_t N, size_t ITERS)
 {
 #ifdef _NVCC
   return;
@@ -200,7 +156,7 @@ void check(double* a, double* b, double* c, double* d, size_t N)
   /* now execute timing loop */
   scalar = 0.1;
 
-  for (int k = 0; k < NTIMES; k++) {
+  for (int k = 0; k < ITERS; k++) {
     bj = scalar;
     cj = aj;
     aj = aj * scalar;
@@ -263,17 +219,18 @@ void kernelSwitch(double* restrict a,
     double* restrict d,
     double scalar,
     size_t N,
+    size_t ITERS,
     size_t iter,
     int j)
 {
   switch (j) {
   case INIT:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[INIT][k] = init_seq(a, scalar, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[INIT][k] = init_tp(a, scalar, N, iter);
       }
     }
@@ -281,11 +238,11 @@ void kernelSwitch(double* restrict a,
 
   case SUM:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[SUM][k] = sum_seq(a, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[SUM][k] = sum_tp(a, N, iter);
       }
     }
@@ -293,11 +250,11 @@ void kernelSwitch(double* restrict a,
 
   case COPY:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[COPY][k] = copy_seq(a, b, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[COPY][k] = copy_tp(a, b, N, iter);
       }
     }
@@ -305,11 +262,11 @@ void kernelSwitch(double* restrict a,
 
   case UPDATE:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[UPDATE][k] = update_seq(a, scalar, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[UPDATE][k] = update_tp(a, scalar, N, iter);
       }
     }
@@ -317,11 +274,11 @@ void kernelSwitch(double* restrict a,
 
   case TRIAD:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[TRIAD][k] = triad_tp(a, b, c, scalar, N, iter);
       }
     }
@@ -329,11 +286,11 @@ void kernelSwitch(double* restrict a,
 
   case DAXPY:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[DAXPY][k] = daxpy_tp(a, b, scalar, N, iter);
       }
     }
@@ -341,11 +298,11 @@ void kernelSwitch(double* restrict a,
 
   case STRIAD:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[STRIAD][k] = striad_tp(a, b, c, d, N, iter);
       }
     }
@@ -353,11 +310,11 @@ void kernelSwitch(double* restrict a,
 
   case SDAXPY:
     if (_SEQ) {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
       }
     } else {
-      for (int k = 0; k < NTIMES; k++) {
+      for (int k = 0; k < ITERS; k++) {
         _t[SDAXPY][k] = sdaxpy_tp(a, b, c, N, iter);
       }
     }
