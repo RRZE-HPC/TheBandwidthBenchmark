@@ -6,6 +6,6 @@
 #define __ALLOCATE_H_
 #include <stdlib.h>
 
-extern void* allocate(size_t alignment, size_t bytesize);
+extern void *allocate(size_t alignment, size_t bytesize);
 
 #endif

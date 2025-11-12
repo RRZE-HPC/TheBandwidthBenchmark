@@ -12,7 +12,7 @@
 
 #define gettid() syscall(SYS_gettid)
 
-static int getProcessorID(cpu_set_t* cpu_set)
+static int getProcessorID(cpu_set_t *cpu_set)
 {
   int processorId;
   int nproc = sysconf(_SC_NPROCESSORS_ONLN);
@@ -25,7 +25,10 @@ static int getProcessorID(cpu_set_t* cpu_set)
   return processorId;
 }
 
-int affinity_getProcessorId() { return sched_getcpu(); }
+int affinity_getProcessorId()
+{
+  return sched_getcpu();
+}
 
 void affinity_pinThread(int processorId)
 {

@@ -19,20 +19,20 @@
 #include "profiler.h"
 #include "util.h"
 
-static void check(double*, double*, double*, double*, size_t);
+static void check(double *, double *, double *, double *, size_t);
 static void kernelSwitch(
-    double*, double*, double*, double*, double, size_t, size_t, int);
+    double *, double *, double *, double *, double, size_t, size_t, int);
 
 typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
-#define HELPTEXT                                                               \
-  "Usage: bwBench [options]\n\n"                                               \
-  "Options:\n"                                                                 \
-  "  -h         Show this help text\n"                                         \
-  "  -m <type>   Benchmark type, can be ws (default), tp, or seq.\n"           \
+#define HELPTEXT                                                                         \
+  "Usage: bwBench [options]\n\n"                                                         \
+  "Options:\n"                                                                           \
+  "  -h         Show this help text\n"                                                   \
+  "  -m <type>   Benchmark type, can be ws (default), tp, or seq.\n"                     \
   "  -s <int>   Size in GB for allocated vectors\n"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   size_t bytesPerWord = sizeof(double);
   size_t N            = SIZE;
@@ -53,7 +53,8 @@ int main(int argc, char** argv)
       exit(EXIT_SUCCESS);
       break;
     case 'm':
-      if (strcmp(optarg, "ws") == 0) type = WS;
+      if (strcmp(optarg, "ws") == 0)
+        type = WS;
       else if (strcmp(optarg, "tp") == 0) {
         type = TP;
         _SEQ = 0;
@@ -90,8 +91,7 @@ int main(int argc, char** argv)
   printf("\n");
   printf(BANNER);
   printf(HLINE);
-  printf("Total allocated datasize: %8.2f MB\n",
-      4.0 * bytesPerWord * N * 1.0E-06);
+  printf("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
   printf(HLINE);
@@ -107,9 +107,7 @@ int main(int argc, char** argv)
 #pragma omp barrier
 #pragma omp critical
     {
-      printf("Thread %d running on processor %d\n",
-          i,
-          affinity_getProcessorId());
+      printf("Thread %d running on processor %d\n", i, affinity_getProcessorId());
       affinity_getmask();
     }
 #endif
@@ -181,7 +179,7 @@ int main(int argc, char** argv)
   return EXIT_SUCCESS;
 }
 
-void check(double* a, double* b, double* c, double* d, size_t N)
+void check(double *a, double *b, double *c, double *d, size_t N)
 {
 #ifdef _NVCC
   return;
@@ -210,10 +208,10 @@ void check(double* a, double* b, double* c, double* d, size_t N)
     aj = aj + bj * cj;
   }
 
-  aj = aj * (double)(N);
-  bj = bj * (double)(N);
-  cj = cj * (double)(N);
-  dj = dj * (double)(N);
+  aj   = aj * (double)(N);
+  bj   = bj * (double)(N);
+  cj   = cj * (double)(N);
+  dj   = dj * (double)(N);
 
   asum = 0.0;
   bsum = 0.0;
@@ -257,10 +255,10 @@ void check(double* a, double* b, double* c, double* d, size_t N)
 }
 
 #ifndef _NVCC
-void kernelSwitch(double* restrict a,
-    double* restrict b,
-    double* restrict c,
-    double* restrict d,
+void kernelSwitch(double *restrict a,
+    double *restrict b,
+    double *restrict c,
+    double *restrict d,
     double scalar,
     size_t N,
     size_t iter,

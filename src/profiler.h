@@ -8,10 +8,16 @@
 #include <stddef.h>
 
 #ifdef _OPENMP
-#define PROFILE(tag, call)                                                     \
-  _Pragma("omp parallel") { LIKWID_MARKER_START(#tag); }                       \
-  _t[tag][k] = call;                                                           \
-  _Pragma("omp parallel") { LIKWID_MARKER_STOP(#tag); }
+#define PROFILE(tag, call)                                                               \
+  _Pragma("omp parallel")                                                                \
+  {                                                                                      \
+    LIKWID_MARKER_START(#tag);                                                           \
+  }                                                                                      \
+  _t[tag][k] = call;                                                                     \
+  _Pragma("omp parallel")                                                                \
+  {                                                                                      \
+    LIKWID_MARKER_STOP(#tag);                                                            \
+  }
 #else
 #define PROFILE(tag, call) _t[tag][k] = call;
 
