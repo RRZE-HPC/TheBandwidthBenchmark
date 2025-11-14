@@ -112,8 +112,8 @@ make format
 When building bwBench with CUDA support, several compile-time parameters can be tuned to optimize performance on different NVIDIA GPU architectures.
 
 ```make
-# Supported: GCC, CLANG, ICC, ICX
-TOOLCHAIN ?= CLANG
+# Supported: GCC, CLANG, ICX, NVCC
+TOOLCHAIN ?= NVCC
 ENABLE_OPENMP ?= false
 ENABLE_LIKWID ?= false
 
@@ -140,10 +140,6 @@ Defines the *requested* number of thread blocks per Streaming Multiprocessor (SM
 This allows you to control occupancy and tailor the workload to your specific GPU.
 
 - Example: setting `THREADBLOCKPERSM=2` requests that the runtime attempt to schedule two blocks per SM.  
-- Actual blocks per SM may vary depending on:
-  - Registers per thread  
-  - Shared memory usage  
-  - Hardware constraints of the GPU
 
 ---
 
