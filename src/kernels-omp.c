@@ -12,10 +12,16 @@
 #include <immintrin.h>
 #endif
 
+#ifdef AVX512_INTRINSICS
+#define INCREMENT i += 8
+#else
+#define INCREMENT i++
+#endif
+
 #define HARNESS(kernel)                                                                  \
   double S, E;                                                                           \
   S = getTimeStamp();                                                                    \
-  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; i++)            \
+  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; INCREMENT)      \
   {                                                                                      \
     kernel;                                                                              \
   }                                                                                      \
@@ -45,16 +51,10 @@ void initArrays(double *a, double *b, double *c, double *d, const size_t N)
 double init(double *restrict a, const double scalar, const size_t N)
 {
 #ifdef AVX512_INTRINSICS
-  double S, E;
   __m512d vs =
       _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
-  S = getTimeStamp();
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < N; i += 8) {
-    _mm512_stream_pd(&a[i], vs);
-  }
-  E = getTimeStamp();
-  return E - S;
+
+  HARNESS(_mm512_stream_pd(&a[i], vs))
 #else
   HARNESS(a[i] = scalar)
 #endif
@@ -81,17 +81,11 @@ double sum(double *restrict a, const size_t N)
 double update(double *restrict a, const double scalar, const size_t N)
 {
 #ifdef AVX512_INTRINSICS
-  double S, E;
   __m512d vs =
       _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
-  S = getTimeStamp();
-#pragma omp parallel for schedule(static)
-  for (int i = 0; i < N; i += 8) {
-    __m512d prod = _mm512_mul_pd(_mm512_load_pd(&a[i]), vs);
-    _mm512_stream_pd(&a[i], prod);
-  }
-  E = getTimeStamp();
-  return E - S;
+
+  HRNESS(__m512d prod = _mm512_mul_pd(_mm512_load_pd(&a[i]), vs);
+      _mm512_stream_pd(&a[i], prod);)
 #else
   HARNESS(a[i] = a[i] * scalar)
 #endif
