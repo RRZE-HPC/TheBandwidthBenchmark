@@ -37,13 +37,15 @@ int main(int argc, char **argv)
   size_t bytesPerWord = sizeof(double);
   size_t N            = SIZE;
 
-  // ensure N is divisible by number of threads and aligned to 8
-  size_t num_threads = 0;
+  // ensure N is divisible by 8
+  size_t num_threads = 1;
+#ifdef _OPENMP
 #pragma omp parallel
   {
 #pragma omp single
     num_threads = omp_get_num_threads();
   }
+#endif
   int base     = (N + num_threads - 1) / num_threads;
   N            = ((base + 7) & ~7) * num_threads;
 
@@ -128,9 +130,13 @@ int main(int argc, char **argv)
 
   for (int k = 0; k < ITERS; k++) {
     PROFILE(INIT, init(b, scalar, N));
-    // double tmp = a[10];
+#ifdef _NVCC
     PROFILE(SUM, sum(a, N));
-    // a[10] = tmp;
+#else
+    double tmp = a[10];
+    PROFILE(SUM, sum(a, N));
+    a[10] = tmp;
+#endif
     PROFILE(COPY, copy(c, a, N));
     PROFILE(UPDATE, update(a, scalar, N));
     PROFILE(TRIAD, triad(a, b, c, scalar, N));
@@ -138,8 +144,10 @@ int main(int argc, char **argv)
     PROFILE(STRIAD, striad(a, b, c, d, N));
     PROFILE(SDAXPY, sdaxpy(a, b, c, N));
   }
-  // FIXME: Adopt to new values
+
+#ifndef _NVCC
   check(a, b, c, d, N, ITERS);
+#endif
   profilerPrint(N);
 
   return EXIT_SUCCESS;

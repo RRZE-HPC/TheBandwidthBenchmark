@@ -99,7 +99,7 @@ void profilerCloseFile(void)
   fclose(profilerFile);
 }
 
-void profilerPrintLine(size_t N, int iter, int j)
+void profilerPrintLine(size_t N, size_t iter, int j)
 {
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
