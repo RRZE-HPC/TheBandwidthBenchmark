@@ -7,10 +7,21 @@
 #include "likwid-marker.h"
 #include <stddef.h>
 
-#define PROFILE(tag, call)                                                     \
-  _Pragma("omp parallel") { LIKWID_MARKER_START(#tag); }                       \
-  _t[tag][k] = call;                                                           \
-  _Pragma("omp parallel") { LIKWID_MARKER_STOP(#tag); }
+#ifdef _OPENMP
+#define PROFILE(tag, call)                                                               \
+  _Pragma("omp parallel")                                                                \
+  {                                                                                      \
+    LIKWID_MARKER_START(#tag);                                                           \
+  }                                                                                      \
+  _t[tag][k] = call;                                                                     \
+  _Pragma("omp parallel")                                                                \
+  {                                                                                      \
+    LIKWID_MARKER_STOP(#tag);                                                            \
+  }
+#else
+#define PROFILE(tag, call) _t[tag][k] = call;
+
+#endif
 
 typedef enum {
   INIT = 0,
