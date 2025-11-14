@@ -5,6 +5,8 @@
 #ifndef __KERNELS_H_
 #define __KERNELS_H_
 #include <stdlib.h>
+#include <time.h>
+
 
 extern void allocateArrays(
     double **a, double **b, double **c, double **d, const size_t N);

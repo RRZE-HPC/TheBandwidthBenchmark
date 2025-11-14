@@ -10,6 +10,7 @@
 #include <omp.h>
 #endif
 
+#include "cli.h"
 #include "profiler.h"
 #include "util.h"
 
@@ -19,8 +20,8 @@ typedef struct {
   size_t flops;
 } workType;
 
-double _t[NUMREGIONS][NTIMES];
-int _SEQ                             = 0;
+// double _t[NUMREGIONS][ITERS];
+double **_t;
 
 FILE *profilerFile                   = NULL;
 
@@ -59,13 +60,27 @@ static void computeStats(double *avgtime, double *maxtime, double *mintime, int 
   *maxtime = 0;
   *mintime = FLT_MAX;
 
-  for (int k = 1; k < NTIMES; k++) {
+  for (int k = 1; k < ITERS; k++) {
     *avgtime += _t[j][k];
     *mintime = MIN(*mintime, _t[j][k]);
     *maxtime = MAX(*maxtime, _t[j][k]);
   }
 
-  *avgtime /= (double)(NTIMES - 1);
+  *avgtime /= (double)(ITERS - 1);
+}
+
+void allocateTimer()
+{
+  _t = malloc(NUMREGIONS * sizeof(double *));
+  for (int i = 0; i < NUMREGIONS; i++)
+    _t[i] = malloc(ITERS * sizeof(double));
+}
+
+void freeTimer()
+{
+  for (int i = 0; i < NUMREGIONS; i++)
+    free(_t[i]);
+  free(_t);
 }
 
 void profilerOpenFile(int region)

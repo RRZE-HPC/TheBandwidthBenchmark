@@ -107,6 +107,68 @@ Reformat all source files using `clang-format`. This only works if
 make format
 ```
 
+### NVIDIA GPU specific build parameters
+
+When building bwBench with CUDA support, several compile-time parameters can be tuned to optimize performance on different NVIDIA GPU architectures.
+
+```make
+# Supported: GCC, CLANG, ICC, ICX
+TOOLCHAIN ?= CLANG
+ENABLE_OPENMP ?= false
+ENABLE_LIKWID ?= false
+
+OPTIONS  =  -DSIZE=120000000ull
+OPTIONS +=  -DNTIMES=10
+OPTIONS +=  -DARRAY_ALIGNMENT=64
+OPTIONS +=  -DTHREADBLOCKSIZE=1024
+OPTIONS +=  -DTHREADBLOCKPERSM=2
+```
+
+#### GPU Tuning Parameters
+
+##### `THREADBLOCKSIZE` (default = 1024)
+
+Defines the CUDA thread block size used for the benchmark kernels (i.e., the number of threads per block).
+
+- Typical values: 128, 256, 512, 1024  
+- Larger block sizes may improve occupancy for some architectures, but not all GPUs benefit equally.  
+- This parameter **has the highest priority** when determining the kernel launch configuration.
+
+##### `THREADBLOCKPERSM` (default = 2)
+
+Defines the *requested* number of thread blocks per Streaming Multiprocessor (SM).  
+This allows you to control occupancy and tailor the workload to your specific GPU.
+
+- Example: setting `THREADBLOCKPERSM=2` requests that the runtime attempt to schedule two blocks per SM.  
+- Actual blocks per SM may vary depending on:
+  - Registers per thread  
+  - Shared memory usage  
+  - Hardware constraints of the GPU
+
+---
+
+#### Interaction Between `THREADBLOCKSIZE` and `THREADBLOCKPERSM`
+
+`THREADBLOCKSIZE` **always takes precedence** when determining kernel execution parameters:
+
+1. The program first attempts to launch kernels with the given `THREADBLOCKSIZE`.  
+2. It then checks whether the GPU can support the requested `THREADBLOCKPERSM` with that block size.  
+3. **If the target `THREADBLOCKPERSM` is achievable** given hardware limits and the selected `THREADBLOCKSIZE`, the program uses it.  
+4. **If not**, the program automatically falls back to the *maximum feasible* blocks per SM for the given thread block size.
+
+## Command Line Arguments
+
+| Option | Argument     | Description                                                                                                   |
+| ------ | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| `-h`   | —            | Show help text.                                                                                               |
+| `-m`   | `<type>`     | Benchmark type. Valid values:<br>• `ws` — Worksharing (default)<br>• `tp` — Throughput<br>• `seq` — Sequential |
+| `-s`   | `<long int>` | Size (in GB) of the allocated vectors.                                                                        |
+| `-n`   | `<long int>` | Number of iterations.                                                                                         |
+| `-i`   | `<type>`     | Data initialization type. Valid values:<br>• `constant` (default) <br>• `random`                                         |
+| `-d`   | `<int>`      | *(GPU-enabled builds only)* GPU ID on which the program should run. (default = 0)|
+
+
+
 ## Support for clang language server
 
 The Makefile will generate a `.clangd` configuration to correctly set all
@@ -132,7 +194,7 @@ bear -- make
 To run the benchmark call:
 
 ```sh
-./bwBench-<TOOLCHAIN> [mode (optional)]
+./bwBench-<TOOLCHAIN> <Command Line Arguments>
 ```
 
 Apart from the default parallel work sharing mode with fixed problem size
@@ -243,7 +305,7 @@ till the array size N specified in `config.mk`.
   kernels. Command to run in sequential mode:
 
 ```sh
-./bwBench-<TOOLCHAIN> seq
+./bwBench-<TOOLCHAIN> -m seq
 ```
 
 - **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded
@@ -251,7 +313,7 @@ till the array size N specified in `config.mk`.
   Command to run in throughput mode:
 
 ```sh
-./bwBench-<TOOLCHAIN> tp
+./bwBench-<TOOLCHAIN> -m tp
 ```
 
 Each of these modes output the results for each individual kernel. The output

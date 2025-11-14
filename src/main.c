@@ -16,10 +16,6 @@
 #include <omp.h>
 #endif
 
-#ifdef _NVCC
-extern int CUDA_DEVICE;
-#endif
-
 #include "affinity.h"
 #include "cli.h"
 #include "kernels.h"
@@ -30,15 +26,17 @@ static void check(double *, double *, double *, double *, size_t, size_t);
 static void kernelSwitch(
     double *, double *, double *, double *, double, size_t, size_t, size_t, int);
 
-int type = WS;
-
 int main(int argc, char **argv)
 {
   size_t bytesPerWord = sizeof(double);
-  size_t N            = SIZE;
+
+  // Data initialization from config.mk
+  N     = SIZE;
+  ITERS = NTIMES;
 
   // ensure N is divisible by 8
   size_t num_threads = 1;
+
 #ifdef _OPENMP
 #pragma omp parallel
   {
@@ -46,15 +44,17 @@ int main(int argc, char **argv)
     num_threads = omp_get_num_threads();
   }
 #endif
-  int base     = (N + num_threads - 1) / num_threads;
-  N            = ((base + 7) & ~7) * num_threads;
 
-  size_t ITERS = NTIMES;
+  int base = (N + num_threads - 1) / num_threads;
+  N        = ((base + 7) & ~7) * num_threads;
+
   double *a, *b, *c, *d;
 
   profilerInit();
 
-  parseCommandLineArguments(argc, argv, &N, &ITERS);
+  parseCLI(argc, argv);
+
+  allocateTimer();
 
   printf("\n");
   printf(BANNER);
@@ -129,6 +129,7 @@ int main(int argc, char **argv)
 #endif
 
   for (int k = 0; k < ITERS; k++) {
+
     PROFILE(INIT, init(b, scalar, N));
 #ifdef _NVCC
     PROFILE(SUM, sum(a, N));
@@ -150,14 +151,16 @@ int main(int argc, char **argv)
 #endif
   profilerPrint(N);
 
+  freeTimer();
+
   return EXIT_SUCCESS;
 }
 
 void check(double *a, double *b, double *c, double *d, size_t N, size_t ITERS)
 {
-#ifdef _NVCC
-  return;
-#endif
+  if (data_init_type == 1) {
+    return;
+  }
 
   double aj, bj, cj, dj, scalar;
   double asum, bsum, csum, dsum;

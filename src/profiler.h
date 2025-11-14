@@ -35,8 +35,9 @@ typedef enum {
   NUMREGIONS
 } regions;
 
-extern double _t[NUMREGIONS][NTIMES];
-extern int _SEQ;
+extern double **_t;
+extern void allocateTimer();
+extern void freeTimer();
 extern void profilerInit();
 extern void profilerPrint(size_t size);
 extern void profilerOpenFile(int region);

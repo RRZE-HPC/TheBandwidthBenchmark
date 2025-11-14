@@ -6,8 +6,10 @@
 #include <stdlib.h>
 
 #include "allocate.h"
+#include "cli.h"
 #include "kernels.h"
 #include "timing.h"
+
 #ifdef AVX512_INTRINSICS
 #include <immintrin.h>
 #endif
@@ -17,6 +19,9 @@
 #else
 #define INCREMENT i++
 #endif
+
+static void init_constants(double *, double *, double *, double *, const size_t);
+static void init_randoms(double *, double *, double *, double *, const size_t);
 
 #define HARNESS(kernel)                                                                  \
   double S, E;                                                                           \
@@ -36,7 +41,7 @@ void allocateArrays(double **a, double **b, double **c, double **d, const size_t
   *d = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
 }
 
-void initArrays(double *a, double *b, double *c, double *d, const size_t N)
+void init_constants(double *a, double *b, double *c, double *d, const size_t N)
 {
 
 #pragma omp parallel for schedule(static)
@@ -45,6 +50,33 @@ void initArrays(double *a, double *b, double *c, double *d, const size_t N)
     b[i] = 2.0;
     c[i] = 0.5;
     d[i] = 1.0;
+  }
+}
+
+void init_randoms(double *a, double *b, double *c, double *d, const size_t N)
+{
+
+#pragma omp parallel
+  {
+    unsigned int seed = time(NULL); // unique seed per thread
+
+#pragma omp for schedule(static)
+    for (size_t i = 0; i < N; i++) {
+      a[i] = (double)rand_r(&seed) / RAND_MAX;
+      b[i] = (double)rand_r(&seed) / RAND_MAX;
+      c[i] = (double)rand_r(&seed) / RAND_MAX;
+      d[i] = (double)rand_r(&seed) / RAND_MAX;
+    }
+  }
+}
+
+void initArrays(double *a, double *b, double *c, double *d, const size_t N)
+{
+
+  if (data_init_type == 0) {
+    init_constants(a, b, c, d, N);
+  } else if (data_init_type == 1) {
+    init_randoms(a, b, c, d, N);
   }
 }
 

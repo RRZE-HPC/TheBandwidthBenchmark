@@ -11,13 +11,20 @@
 
 #include "cli.h"
 
-void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
+int CUDA_DEVICE    = 0;
+int type           = WS;
+int _SEQ           = 0;
+int data_init_type = 0;
+size_t N           = 125000000ull;
+size_t ITERS       = 10;
+
+void parseCLI(int argc, char **argv)
 {
   int co;
   opterr = 0;
   int index;
 
-  while ((co = getopt(argc, argv, "hm:s:n:d:")) != -1)
+  while ((co = getopt(argc, argv, "hm:s:n:i:d:")) != -1)
     switch (co) {
     case 'h': {
       printf(HELPTEXT);
@@ -26,7 +33,8 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 'm': {
-      if (strcmp(optarg, "ws") == 0) type = WS;
+      if (strcmp(optarg, "ws") == 0)
+        type = WS;
       else if (strcmp(optarg, "tp") == 0) {
         type = TP;
         _SEQ = 0;
@@ -41,9 +49,9 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 's': {
-      char* end;
+      char *end;
       errno = 0;
-      *N    = strtol(optarg, &end, 10);
+      N     = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0) {
         fprintf(stderr, "Invalid numeric value for -s: %s\n", optarg);
         exit(1);
@@ -52,9 +60,9 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 'n': {
-      char* end;
-      errno  = 0;
-      *ITERS = strtol(optarg, &end, 10);
+      char *end;
+      errno = 0;
+      ITERS = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0) {
         fprintf(stderr, "Invalid numeric value for -n: %s\n", optarg);
         exit(1);
@@ -62,8 +70,20 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
       break;
     }
 
+    case 'i': {
+      if (strcmp(optarg, "constant") == 0)
+        data_init_type = 0;
+      else if (strcmp(optarg, "random") == 0) {
+        data_init_type = 1;
+      } else {
+        printf("Invalid data initialization type %s\n", optarg);
+        exit(1);
+      }
+      break;
+    }
+
     case 'd': {
-      char* end;
+      char *end;
       errno    = 0;
       long val = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0 || val < 0 || val > INT_MAX) {
