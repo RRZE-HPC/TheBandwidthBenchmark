@@ -8,27 +8,35 @@
 #include "allocate.h"
 #include "kernels.h"
 #include "timing.h"
+#ifdef AVX512_INTRINSICS
+#include <immintrin.h>
+#endif
 
-#define HARNESS(kernel)                                                        \
-  double S, E;                                                                 \
-  S = getTimeStamp();                                                          \
-  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; i++)  \
-  {                                                                            \
-    kernel;                                                                    \
-  }                                                                            \
-  E = getTimeStamp();                                                          \
+#ifdef AVX512_INTRINSICS
+#define INCREMENT i += 8
+#else
+#define INCREMENT i++
+#endif
+
+#define HARNESS(kernel)                                                                  \
+  double S, E;                                                                           \
+  S = getTimeStamp();                                                                    \
+  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; INCREMENT)      \
+  {                                                                                      \
+    kernel;                                                                              \
+  }                                                                                      \
+  E = getTimeStamp();                                                                    \
   return E - S;
 
-void allocateArrays(
-    double** a, double** b, double** c, double** d, const size_t N)
+void allocateArrays(double **a, double **b, double **c, double **d, const size_t N)
 {
-  *a = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
-  *b = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
-  *c = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
-  *d = (double*)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *a = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *b = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *c = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
+  *d = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
 }
 
-void initArrays(double* a, double* b, double* c, double* d, const size_t N)
+void initArrays(double *a, double *b, double *c, double *d, const size_t N)
 {
 
 #pragma omp parallel for schedule(static)
@@ -40,17 +48,24 @@ void initArrays(double* a, double* b, double* c, double* d, const size_t N)
   }
 }
 
-double init(double* restrict a, const double scalar, const size_t N)
+double init(double *restrict a, const double scalar, const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  __m512d vs =
+      _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
+
+  HARNESS(_mm512_stream_pd(&a[i], vs))
+#else
   HARNESS(a[i] = scalar)
+#endif
 }
 
-double sum(double* restrict a, const size_t N)
+double sum(double *restrict a, const size_t N)
 {
   double S, E;
   double sum = 0.0;
 
-  S = getTimeStamp();
+  S          = getTimeStamp();
 #pragma omp parallel for reduction(+ : sum) schedule(static)
   for (size_t i = 0; i < N; i++) {
     sum += a[i];
@@ -63,42 +78,82 @@ double sum(double* restrict a, const size_t N)
   return E - S;
 }
 
-double update(double* restrict a, const double scalar, const size_t N)
+double update(double *restrict a, const double scalar, const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  __m512d vs =
+      _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
+
+  HARNESS(__m512d prod = _mm512_mul_pd(_mm512_load_pd(&a[i]), vs);
+      _mm512_stream_pd(&a[i], prod);)
+#else
   HARNESS(a[i] = a[i] * scalar)
+#endif
 }
 
-double copy(double* restrict a, double* restrict b, const size_t N)
+double copy(double *restrict a, double *restrict b, const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  HARNESS(__m512d load = _mm512_load_pd(&b[i]); _mm512_stream_pd(&a[i], load);)
+#else
   HARNESS(a[i] = b[i])
+#endif
 }
 
-double triad(double* restrict a,
-    double* restrict b,
-    double* restrict c,
+double triad(double *restrict a,
+    double *restrict b,
+    double *restrict c,
     const double scalar,
     const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  __m512d vs =
+      _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
+
+  HARNESS(__m512d bvec = _mm512_load_pd(&b[i]);
+      __m512d avec     = _mm512_fmadd_pd(_mm512_load_pd(&c[i]), vs, bvec);
+      _mm512_stream_pd(&a[i], avec);)
+#else
   HARNESS(a[i] = b[i] + scalar * c[i])
+#endif
 }
 
-double striad(double* restrict a,
-    double* restrict b,
-    double* restrict c,
-    double* restrict d,
+double striad(double *restrict a,
+    double *restrict b,
+    double *restrict c,
+    double *restrict d,
     const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  HARNESS(__m512d bvec = _mm512_load_pd(&b[i]); __m512d dvec = _mm512_load_pd(&d[i]);
+      __m512d avec = _mm512_fmadd_pd(_mm512_load_pd(&c[i]), dvec, bvec);
+      _mm512_stream_pd(&a[i], avec);)
+#else
   HARNESS(a[i] = b[i] + d[i] * c[i])
+#endif
 }
 
-double daxpy(
-    double* restrict a, double* restrict b, const double scalar, const size_t N)
+double daxpy(double *restrict a, double *restrict b, const double scalar, const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  __m512d vs =
+      _mm512_set_pd(scalar, scalar, scalar, scalar, scalar, scalar, scalar, scalar);
+
+  HARNESS(__m512d bvec = _mm512_load_pd(&b[i]);
+      __m512d avec     = _mm512_fmadd_pd(bvec, vs, _mm512_load_pd(&a[i]));
+      _mm512_stream_pd(&a[i], avec);)
+#else
   HARNESS(a[i] = a[i] + scalar * b[i])
+#endif
 }
 
-double sdaxpy(
-    double* restrict a, double* restrict b, double* restrict c, const size_t N)
+double sdaxpy(double *restrict a, double *restrict b, double *restrict c, const size_t N)
 {
+#ifdef AVX512_INTRINSICS
+  HARNESS(__m512d bvec = _mm512_load_pd(&b[i]); __m512d cvec = _mm512_load_pd(&c[i]);
+      __m512d avec = _mm512_fmadd_pd(bvec, cvec, _mm512_load_pd(&a[i]));
+      _mm512_stream_pd(&a[i], avec);)
+#else
   HARNESS(a[i] = a[i] + b[i] * c[i])
+#endif
 }

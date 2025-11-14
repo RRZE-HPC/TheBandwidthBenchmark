@@ -26,17 +26,30 @@ extern int CUDA_DEVICE;
 #include "profiler.h"
 #include "util.h"
 
-static void check(double*, double*, double*, double*, size_t, size_t);
+static void check(double *, double *, double *, double *, size_t, size_t);
 static void kernelSwitch(
-    double*, double*, double*, double*, double, size_t, size_t, size_t, int);
+    double *, double *, double *, double *, double, size_t, size_t, size_t, int);
 
 int type = WS;
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   size_t bytesPerWord = sizeof(double);
   size_t N            = SIZE;
-  size_t ITERS        = NTIMES;
+
+  // ensure N is divisible by 8
+  size_t num_threads = 1;
+#ifdef _OPENMP
+#pragma omp parallel
+  {
+#pragma omp single
+    num_threads = omp_get_num_threads();
+  }
+#endif
+  int base     = (N + num_threads - 1) / num_threads;
+  N            = ((base + 7) & ~7) * num_threads;
+
+  size_t ITERS = NTIMES;
   double *a, *b, *c, *d;
 
   profilerInit();
@@ -46,8 +59,7 @@ int main(int argc, char** argv)
   printf("\n");
   printf(BANNER);
   printf(HLINE);
-  printf("Total allocated datasize: %8.2f MB\n",
-      4.0 * bytesPerWord * N * 1.0E-06);
+  printf("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
   printf(HLINE);
@@ -63,9 +75,7 @@ int main(int argc, char** argv)
 #pragma omp barrier
 #pragma omp critical
     {
-      printf("Thread %d running on processor %d\n",
-          i,
-          affinity_getProcessorId());
+      printf("Thread %d running on processor %d\n", i, affinity_getProcessorId());
       affinity_getmask();
     }
 #endif
@@ -120,9 +130,13 @@ int main(int argc, char** argv)
 
   for (int k = 0; k < ITERS; k++) {
     PROFILE(INIT, init(b, scalar, N));
-    // double tmp = a[10];
+#ifdef _NVCC
     PROFILE(SUM, sum(a, N));
-    // a[10] = tmp;
+#else
+    double tmp = a[10];
+    PROFILE(SUM, sum(a, N));
+    a[10] = tmp;
+#endif
     PROFILE(COPY, copy(c, a, N));
     PROFILE(UPDATE, update(a, scalar, N));
     PROFILE(TRIAD, triad(a, b, c, scalar, N));
@@ -130,14 +144,16 @@ int main(int argc, char** argv)
     PROFILE(STRIAD, striad(a, b, c, d, N));
     PROFILE(SDAXPY, sdaxpy(a, b, c, N));
   }
-  // FIXME: Adopt to new values
+
+#ifndef _NVCC
   check(a, b, c, d, N, ITERS);
+#endif
   profilerPrint(N);
 
   return EXIT_SUCCESS;
 }
 
-void check(double* a, double* b, double* c, double* d, size_t N, size_t ITERS)
+void check(double *a, double *b, double *c, double *d, size_t N, size_t ITERS)
 {
 #ifdef _NVCC
   return;
@@ -166,10 +182,10 @@ void check(double* a, double* b, double* c, double* d, size_t N, size_t ITERS)
     aj = aj + bj * cj;
   }
 
-  aj = aj * (double)(N);
-  bj = bj * (double)(N);
-  cj = cj * (double)(N);
-  dj = dj * (double)(N);
+  aj   = aj * (double)(N);
+  bj   = bj * (double)(N);
+  cj   = cj * (double)(N);
+  dj   = dj * (double)(N);
 
   asum = 0.0;
   bsum = 0.0;
@@ -213,10 +229,10 @@ void check(double* a, double* b, double* c, double* d, size_t N, size_t ITERS)
 }
 
 #ifndef _NVCC
-void kernelSwitch(double* restrict a,
-    double* restrict b,
-    double* restrict c,
-    double* restrict d,
+void kernelSwitch(double *restrict a,
+    double *restrict b,
+    double *restrict c,
+    double *restrict d,
     double scalar,
     size_t N,
     size_t ITERS,
