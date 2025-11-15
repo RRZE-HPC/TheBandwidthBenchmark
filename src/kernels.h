@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-
 extern void allocateArrays(
     double **a, double **b, double **c, double **d, const size_t N);
 extern void initArrays(double *a, double *b, double *c, double *d, const size_t N);
