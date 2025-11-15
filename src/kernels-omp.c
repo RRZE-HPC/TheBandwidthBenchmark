@@ -23,10 +23,12 @@
 static void init_constants(double *, double *, double *, double *, const size_t);
 static void init_randoms(double *, double *, double *, double *, const size_t);
 
+// Adding simd clause because ICX compiler does
+// not vectorise the code due to size_t dataype.
 #define HARNESS(kernel)                                                                  \
   double S, E;                                                                           \
   S = getTimeStamp();                                                                    \
-  _Pragma("omp parallel for schedule(static)") for (size_t i = 0; i < N; INCREMENT)      \
+  _Pragma("omp parallel for simd schedule(static)") for (size_t i = 0; i < N; INCREMENT) \
   {                                                                                      \
     kernel;                                                                              \
   }                                                                                      \
