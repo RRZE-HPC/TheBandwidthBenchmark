@@ -20,8 +20,8 @@
 #define INCREMENT i++
 #endif
 
-static void init_constants(double *, double *, double *, double *, const size_t);
-static void init_randoms(double *, double *, double *, double *, const size_t);
+static void initConstants(double *, double *, double *, double *, const size_t);
+static void initRandoms(double *, double *, double *, double *, const size_t);
 
 // Adding simd clause because ICX compiler does
 // not vectorise the code due to size_t dataype.
@@ -43,7 +43,7 @@ void allocateArrays(double **a, double **b, double **c, double **d, const size_t
   *d = (double *)allocate(ARRAY_ALIGNMENT, N * sizeof(double));
 }
 
-void init_constants(double *a, double *b, double *c, double *d, const size_t N)
+void initConstants(double *a, double *b, double *c, double *d, const size_t N)
 {
 
 #pragma omp parallel for schedule(static)
@@ -55,7 +55,7 @@ void init_constants(double *a, double *b, double *c, double *d, const size_t N)
   }
 }
 
-void init_randoms(double *a, double *b, double *c, double *d, const size_t N)
+void initRandoms(double *a, double *b, double *c, double *d, const size_t N)
 {
 
 #pragma omp parallel
@@ -76,9 +76,9 @@ void initArrays(double *a, double *b, double *c, double *d, const size_t N)
 {
 
   if (data_init_type == 0) {
-    init_constants(a, b, c, d, N);
+    initConstants(a, b, c, d, N);
   } else if (data_init_type == 1) {
-    init_randoms(a, b, c, d, N);
+    initRandoms(a, b, c, d, N);
   }
 }
 
