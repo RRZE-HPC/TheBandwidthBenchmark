@@ -11,6 +11,7 @@
 #endif
 
 #include "cli.h"
+#include "likwid-marker.h"
 #include "profiler.h"
 #include "util.h"
 

@@ -13,7 +13,7 @@
 
 int CUDA_DEVICE    = 0;
 int type           = WS;
-int _SEQ           = 0;
+int SEQ            = 0;
 int data_init_type = 0;
 size_t N           = 125000000ull;
 size_t ITERS       = 10;

@@ -22,7 +22,7 @@
       if (al[N - 1] < 0.0)                                                               \
         printf("Ai = %f\n", al[N - 1]);                                                  \
     }                                                                                    \
-    _Pragma("omp single") E = getTimeStamp();                                            \
+    _Pragma("omp barrier") _Pragma("omp single") E = getTimeStamp();                     \
     free(al);                                                                            \
   }                                                                                      \
   return E - S;

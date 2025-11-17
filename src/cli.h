@@ -5,6 +5,8 @@
 #ifndef CLI_H
 #define CLI_H
 
+#include <stddef.h>
+
 typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
 #define HELPTEXT                                                                         \
