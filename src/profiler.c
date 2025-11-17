@@ -20,10 +20,8 @@ typedef struct {
 } workType;
 
 double _t[NUMREGIONS][NTIMES];
-int _SEQ                             = 0;
-
+int SEQ                              = 0;
 FILE *profilerFile                   = NULL;
-
 char *dat_directory                  = "dat\0";
 
 static workType _regions[NUMREGIONS] = {
@@ -53,7 +51,7 @@ void profilerInit(void)
   }
 }
 
-static void computeStats(double *avgtime, double *maxtime, double *mintime, int j)
+static void computeStats(double *avgtime, double *maxtime, double *mintime, const int j)
 {
   *avgtime = 0;
   *maxtime = 0;
@@ -68,7 +66,7 @@ static void computeStats(double *avgtime, double *maxtime, double *mintime, int 
   *avgtime /= (double)(NTIMES - 1);
 }
 
-void profilerOpenFile(int region)
+void profilerOpenFile(const int region)
 {
   char filename[40];
   sprintf(filename, "%s/%s.dat", dat_directory, _regions[region].label);
@@ -99,7 +97,7 @@ void profilerCloseFile(void)
   fclose(profilerFile);
 }
 
-void profilerPrintLine(size_t N, size_t iter, int j)
+void profilerPrintLine(const size_t N, const size_t iter, const int j)
 {
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
@@ -107,7 +105,7 @@ void profilerPrintLine(size_t N, size_t iter, int j)
   int num_threads = 1;
 
 #ifdef _OPENMP
-  if (!_SEQ) {
+  if (!SEQ) {
     _Pragma("omp parallel")
     {
       num_threads = omp_get_num_threads();
@@ -145,12 +143,12 @@ void profilerPrintLine(size_t N, size_t iter, int j)
   }
 }
 
-void profilerPrint(size_t N)
+void profilerPrint(const size_t N)
 {
-  size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
 
 #ifdef VERBOSE_DATASIZE
+  size_t bytesPerWord = sizeof(double);
   printf(HLINE);
   printf("Dataset sizes\n");
   for (int i = 0; i < NUMREGIONS; i++) {
@@ -166,8 +164,8 @@ void profilerPrint(size_t N)
 
   for (int j = 0; j < NUMREGIONS; j++) {
     computeStats(&avgtime, &maxtime, &mintime, j);
-    double bytes = (double)_regions[j].words * sizeof(double) * N;
-    double flops = (double)_regions[j].flops * N;
+    const double bytes = (double)_regions[j].words * sizeof(double) * N;
+    const double flops = (double)_regions[j].flops * N;
 
     if (flops > 0) {
       printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n",

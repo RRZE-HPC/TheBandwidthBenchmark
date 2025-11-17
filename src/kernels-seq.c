@@ -9,8 +9,7 @@
 #include "timing.h"
 
 #define HARNESS(kernel)                                                                  \
-  double S, E;                                                                           \
-  S = getTimeStamp();                                                                    \
+  const double S = getTimeStamp();                                                       \
   for (size_t j = 0; j < iter; j++) {                                                    \
     for (size_t i = 0; i < N; i++) {                                                     \
       kernel;                                                                            \
@@ -20,7 +19,7 @@
       exit(1);                                                                           \
     }                                                                                    \
   }                                                                                      \
-  E = getTimeStamp();                                                                    \
+  const double E = getTimeStamp();                                                       \
   return E - S;
 
 double init_seq(
@@ -35,14 +34,15 @@ double update_seq(
   HARNESS(a[i] = a[i] * scalar)
 }
 
-double copy_seq(double *restrict a, double *restrict b, const size_t N, const size_t iter)
+double copy_seq(
+    double *restrict a, const double *restrict b, const size_t N, const size_t iter)
 {
   HARNESS(a[i] = b[i])
 }
 
 double triad_seq(double *restrict a,
-    double *restrict b,
-    double *restrict c,
+    const double *restrict b,
+    const double *restrict c,
     const double scalar,
     const size_t N,
     const size_t iter)
@@ -51,9 +51,9 @@ double triad_seq(double *restrict a,
 }
 
 double striad_seq(double *restrict a,
-    double *restrict b,
-    double *restrict c,
-    double *restrict d,
+    const double *restrict b,
+    const double *restrict c,
+    const double *restrict d,
     const size_t N,
     const size_t iter)
 {
@@ -61,7 +61,7 @@ double striad_seq(double *restrict a,
 }
 
 double daxpy_seq(double *restrict a,
-    double *restrict b,
+    const double *restrict b,
     const double scalar,
     const size_t N,
     const size_t iter)
@@ -70,8 +70,8 @@ double daxpy_seq(double *restrict a,
 }
 
 double sdaxpy_seq(double *restrict a,
-    double *restrict b,
-    double *restrict c,
+    const double *restrict b,
+    const double *restrict c,
     const size_t N,
     const size_t iter)
 {
@@ -80,10 +80,9 @@ double sdaxpy_seq(double *restrict a,
 
 double sum_seq(double *restrict a, const size_t N, const size_t iter)
 {
-  double S, E;
-  double sum = 0.0;
+  double sum     = 0.0;
 
-  S          = getTimeStamp();
+  const double S = getTimeStamp();
   for (size_t j = 0; j < iter; j++) {
     for (size_t i = 0; i < N; i++) {
       sum += a[i];
@@ -91,7 +90,7 @@ double sum_seq(double *restrict a, const size_t N, const size_t iter)
 
     a[10] = sum;
   }
-  E = getTimeStamp();
+  const double E = getTimeStamp();
 
   /* make the compiler think this makes actually sense */
   a[10] = sum;

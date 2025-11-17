@@ -3,7 +3,6 @@
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "allocate.h"
 #include "kernels.h"
@@ -34,19 +33,20 @@ double init_tp(double *restrict a, const double scalar, const size_t N, const si
 }
 
 double update_tp(
-    double *restrict a, const double scalar, const size_t N, const size_t iter)
+    const double *restrict a, const double scalar, const size_t N, const size_t iter)
 {
   HARNESS(al[i] = a[i] * scalar)
 }
 
-double copy_tp(double *restrict a, double *restrict b, const size_t N, const size_t iter)
+double copy_tp(
+    double *restrict a, const double *restrict b, const size_t N, const size_t iter)
 {
   HARNESS(al[i] = b[i])
 }
 
 double triad_tp(double *restrict a,
-    double *restrict b,
-    double *restrict c,
+    const double *restrict b,
+    const double *restrict c,
     const double scalar,
     const size_t N,
     const size_t iter)
@@ -55,17 +55,17 @@ double triad_tp(double *restrict a,
 }
 
 double striad_tp(double *restrict a,
-    double *restrict b,
-    double *restrict c,
-    double *restrict d,
+    const double *restrict b,
+    const double *restrict c,
+    const double *restrict d,
     const size_t N,
     const size_t iter)
 {
   HARNESS(al[i] = b[i] + d[i] * c[i])
 }
 
-double daxpy_tp(double *restrict a,
-    double *restrict b,
+double daxpy_tp(const double *restrict a,
+    const double *restrict b,
     const double scalar,
     const size_t N,
     const size_t iter)
@@ -73,16 +73,16 @@ double daxpy_tp(double *restrict a,
   HARNESS(al[i] = a[i] + scalar * b[i])
 }
 
-double sdaxpy_tp(double *restrict a,
-    double *restrict b,
-    double *restrict c,
+double sdaxpy_tp(const double *restrict a,
+    const double *restrict b,
+    const double *restrict c,
     const size_t N,
     const size_t iter)
 {
   HARNESS(al[i] = a[i] + b[i] * c[i])
 }
 
-double sum_tp(double *restrict a, const size_t N, const size_t iter)
+double sum_tp(const double *restrict a, const size_t N, const size_t iter)
 {
   double S, E;
 

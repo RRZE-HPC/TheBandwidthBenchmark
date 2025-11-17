@@ -5,9 +5,6 @@
 #ifndef CLI_H
 #define CLI_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
 typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
 #define HELPTEXT                                                               \
@@ -22,7 +19,7 @@ typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
 extern int CUDA_DEVICE;
 extern int type;
-extern int _SEQ;
+extern int SEQ;
 
 extern void parseCommandLineArguments(int, char**, size_t*, size_t*);
 

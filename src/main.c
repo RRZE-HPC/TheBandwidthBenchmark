@@ -26,19 +26,27 @@ extern int CUDA_DEVICE;
 #include "profiler.h"
 #include "util.h"
 
-static void check(double *, double *, double *, double *, size_t, size_t);
-static void kernelSwitch(
-    double *, double *, double *, double *, double, size_t, size_t, size_t, int);
+static void check(
+    const double *, const double *, const double *, const double *, size_t, size_t);
+static void kernelSwitch(double *,
+    const double *,
+    const double *,
+    const double *,
+    double,
+    size_t,
+    size_t,
+    size_t,
+    int);
 
 int type = WS;
 
-int main(int argc, char **argv)
+int main(const int argc, char **argv)
 {
-  size_t bytesPerWord = sizeof(double);
-  size_t N            = SIZE;
+  const size_t bytesPerWord = sizeof(double);
+  size_t N                  = SIZE;
 
   // ensure N is divisible by 8
-  size_t num_threads = 1;
+  int num_threads = 1;
 #ifdef _OPENMP
 #pragma omp parallel
   {
@@ -46,10 +54,10 @@ int main(int argc, char **argv)
     num_threads = omp_get_num_threads();
   }
 #endif
-  int base     = (N + num_threads - 1) / num_threads;
-  N            = ((base + 7) & ~7) * num_threads;
+  const int base = (N + num_threads - 1) / num_threads;
+  N              = ((base + 7) & ~7) * num_threads;
 
-  size_t ITERS = NTIMES;
+  size_t ITERS   = NTIMES;
   double *a, *b, *c, *d;
 
   profilerInit();
@@ -81,13 +89,13 @@ int main(int argc, char **argv)
 #endif
   }
 #else
-  _SEQ = 1;
+  SEQ = 1;
 #endif
 
   allocateArrays(&a, &b, &c, &d, N);
   initArrays(a, b, c, d, N);
 
-  double scalar = 0.1;
+  const double scalar = 0.1;
 
 #ifndef _NVCC
   if (type == TP || type == SQ) {
@@ -110,7 +118,7 @@ int main(int argc, char **argv)
             break;
           }
           if ((newtime - oldtime) > 0.0) {
-            double factor = 0.3 / (newtime - oldtime);
+            const double factor = 0.3 / (newtime - oldtime);
             iter *= (int)factor;
             oldtime = newtime;
           }
@@ -133,7 +141,7 @@ int main(int argc, char **argv)
 #ifdef _NVCC
     PROFILE(SUM, sum(a, N));
 #else
-    double tmp = a[10];
+    const double tmp = a[10];
     PROFILE(SUM, sum(a, N));
     a[10] = tmp;
 #endif
@@ -153,44 +161,46 @@ int main(int argc, char **argv)
   return EXIT_SUCCESS;
 }
 
-void check(double *a, double *b, double *c, double *d, size_t N, size_t ITERS)
+void check(const double *a,
+    const double *b,
+    const double *c,
+    const double *d,
+    const size_t N,
+    const size_t ITERS)
 {
 #ifdef _NVCC
   return;
 #endif
 
-  double aj, bj, cj, dj, scalar;
-  double asum, bsum, csum, dsum;
   double epsilon;
 
   /* reproduce initialization */
-  aj = 2.0;
-  bj = 2.0;
-  cj = 0.5;
-  dj = 1.0;
+  double aj = 2.0;
+  double bj = 2.0;
+  double cj = 0.5;
+  double dj = 1.0;
 
   /* now execute timing loop */
-  scalar = 0.1;
-
   for (int k = 0; k < ITERS; k++) {
-    bj = scalar;
-    cj = aj;
-    aj = aj * scalar;
-    aj = bj + scalar * cj;
-    aj = aj + scalar * bj;
-    aj = bj + cj * dj;
-    aj = aj + bj * cj;
+    const double scalar = 0.1;
+    bj                  = scalar;
+    cj                  = aj;
+    aj                  = aj * scalar;
+    aj                  = bj + scalar * cj;
+    aj                  = aj + scalar * bj;
+    aj                  = bj + cj * dj;
+    aj                  = aj + bj * cj;
   }
 
-  aj   = aj * (double)(N);
-  bj   = bj * (double)(N);
-  cj   = cj * (double)(N);
-  dj   = dj * (double)(N);
+  aj          = aj * (double)(N);
+  bj          = bj * (double)(N);
+  cj          = cj * (double)(N);
+  dj          = dj * (double)(N);
 
-  asum = 0.0;
-  bsum = 0.0;
-  csum = 0.0;
-  dsum = 0.0;
+  double asum = 0.0;
+  double bsum = 0.0;
+  double csum = 0.0;
+  double dsum = 0.0;
 
   for (size_t i = 0; i < N; i++) {
     asum += a[i];
@@ -230,18 +240,18 @@ void check(double *a, double *b, double *c, double *d, size_t N, size_t ITERS)
 
 #ifndef _NVCC
 void kernelSwitch(double *restrict a,
-    double *restrict b,
-    double *restrict c,
-    double *restrict d,
-    double scalar,
-    size_t N,
-    size_t ITERS,
-    size_t iter,
-    int j)
+    const double *restrict b,
+    const double *restrict c,
+    const double *restrict d,
+    const double scalar,
+    const size_t N,
+    const size_t ITERS,
+    const size_t iter,
+    const int j)
 {
   switch (j) {
   case INIT:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[INIT][k] = init_seq(a, scalar, N, iter);
       }
@@ -253,7 +263,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case SUM:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[SUM][k] = sum_seq(a, N, iter);
       }
@@ -265,7 +275,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case COPY:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[COPY][k] = copy_seq(a, b, N, iter);
       }
@@ -277,7 +287,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case UPDATE:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[UPDATE][k] = update_seq(a, scalar, N, iter);
       }
@@ -289,7 +299,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case TRIAD:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
       }
@@ -301,7 +311,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case DAXPY:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
       }
@@ -313,7 +323,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case STRIAD:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
       }
@@ -325,7 +335,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case SDAXPY:
-    if (_SEQ) {
+    if (SEQ) {
       for (int k = 0; k < ITERS; k++) {
         _t[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
       }
@@ -335,6 +345,7 @@ void kernelSwitch(double *restrict a,
       }
     }
     break;
+  default:;
   }
 }
 #endif

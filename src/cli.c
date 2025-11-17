@@ -11,11 +11,10 @@
 
 #include "cli.h"
 
-void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
+void parseCommandLineArguments(int argc, char **argv, size_t *N, size_t *ITERS)
 {
   int co;
   opterr = 0;
-  int index;
 
   while ((co = getopt(argc, argv, "hm:s:n:d:")) != -1)
     switch (co) {
@@ -26,13 +25,14 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 'm': {
-      if (strcmp(optarg, "ws") == 0) type = WS;
+      if (strcmp(optarg, "ws") == 0)
+        type = WS;
       else if (strcmp(optarg, "tp") == 0) {
         type = TP;
-        _SEQ = 0;
+        SEQ  = 0;
       } else if (strcmp(optarg, "seq") == 0) {
         type = SQ;
-        _SEQ = 1;
+        SEQ  = 1;
       } else {
         printf("Unknown bench type %s\n", optarg);
         exit(1);
@@ -41,7 +41,7 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 's': {
-      char* end;
+      char *end;
       errno = 0;
       *N    = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0) {
@@ -52,7 +52,7 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 'n': {
-      char* end;
+      char *end;
       errno  = 0;
       *ITERS = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0) {
@@ -63,9 +63,9 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
     }
 
     case 'd': {
-      char* end;
-      errno    = 0;
-      long val = strtol(optarg, &end, 10);
+      char *end;
+      errno          = 0;
+      const long val = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0 || val < 0 || val > INT_MAX) {
         fprintf(stderr, "Invalid CUDA device ID: %s\n", optarg);
         exit(1);
@@ -91,7 +91,7 @@ void parseCommandLineArguments(int argc, char** argv, size_t* N, size_t* ITERS)
       abort();
     }
 
-  for (index = optind; index < argc; index++) {
+  for (int index = optind; index < argc; index++) {
     printf("Non-option argument %s\n", argv[index]);
   }
 }
