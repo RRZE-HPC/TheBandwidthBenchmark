@@ -3,7 +3,6 @@
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "allocate.h"
 #include "cli.h"
@@ -96,15 +95,14 @@ double init(double *restrict a, const double scalar, const size_t N)
 
 double sum(double *restrict a, const size_t N)
 {
-  double S, E;
-  double sum = 0.0;
+  double sum     = 0.0;
 
-  S          = getTimeStamp();
+  const double S = getTimeStamp();
 #pragma omp parallel for reduction(+ : sum) schedule(static)
   for (size_t i = 0; i < N; i++) {
     sum += a[i];
   }
-  E = getTimeStamp();
+  const double E = getTimeStamp();
 
   /* make the compiler think this makes actually sense */
   a[10] = sum;
@@ -125,7 +123,7 @@ double update(double *restrict a, const double scalar, const size_t N)
 #endif
 }
 
-double copy(double *restrict a, double *restrict b, const size_t N)
+double copy(double *restrict a, const double *restrict b, const size_t N)
 {
 #ifdef AVX512_INTRINSICS
   HARNESS(__m512d load = _mm512_load_pd(&b[i]); _mm512_stream_pd(&a[i], load);)
@@ -135,8 +133,8 @@ double copy(double *restrict a, double *restrict b, const size_t N)
 }
 
 double triad(double *restrict a,
-    double *restrict b,
-    double *restrict c,
+    const double *restrict b,
+    const double *restrict c,
     const double scalar,
     const size_t N)
 {
@@ -153,9 +151,9 @@ double triad(double *restrict a,
 }
 
 double striad(double *restrict a,
-    double *restrict b,
-    double *restrict c,
-    double *restrict d,
+    const double *restrict b,
+    const double *restrict c,
+    const double *restrict d,
     const size_t N)
 {
 #ifdef AVX512_INTRINSICS
@@ -167,7 +165,8 @@ double striad(double *restrict a,
 #endif
 }
 
-double daxpy(double *restrict a, double *restrict b, const double scalar, const size_t N)
+double daxpy(
+    double *restrict a, const double *restrict b, const double scalar, const size_t N)
 {
 #ifdef AVX512_INTRINSICS
   __m512d vs =
@@ -181,7 +180,10 @@ double daxpy(double *restrict a, double *restrict b, const double scalar, const 
 #endif
 }
 
-double sdaxpy(double *restrict a, double *restrict b, double *restrict c, const size_t N)
+double sdaxpy(double *restrict a,
+    const double *restrict b,
+    const double *restrict c,
+    const size_t N)
 {
 #ifdef AVX512_INTRINSICS
   HARNESS(__m512d bvec = _mm512_load_pd(&b[i]); __m512d cvec = _mm512_load_pd(&c[i]);

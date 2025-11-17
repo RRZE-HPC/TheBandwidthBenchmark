@@ -4,10 +4,11 @@
  * license that can be found in the LICENSE file. */
 #ifndef __PROFILER_H_
 #define __PROFILER_H_
-#include "likwid-marker.h"
 #include <stddef.h>
 
 #ifdef _OPENMP
+#include "likwid-marker.h"
+
 #define PROFILE(tag, call)                                                               \
   _Pragma("omp parallel")                                                                \
   {                                                                                      \

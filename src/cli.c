@@ -22,7 +22,6 @@ void parseCLI(int argc, char **argv)
 {
   int co;
   opterr = 0;
-  int index;
 
   while ((co = getopt(argc, argv, "hm:s:n:i:d:")) != -1)
     switch (co) {
@@ -37,10 +36,10 @@ void parseCLI(int argc, char **argv)
         type = WS;
       else if (strcmp(optarg, "tp") == 0) {
         type = TP;
-        _SEQ = 0;
+        SEQ  = 0;
       } else if (strcmp(optarg, "seq") == 0) {
         type = SQ;
-        _SEQ = 1;
+        SEQ  = 1;
       } else {
         printf("Unknown bench type %s\n", optarg);
         exit(1);
@@ -84,8 +83,8 @@ void parseCLI(int argc, char **argv)
 
     case 'd': {
       char *end;
-      errno    = 0;
-      long val = strtol(optarg, &end, 10);
+      errno          = 0;
+      const long val = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0 || val < 0 || val > INT_MAX) {
         fprintf(stderr, "Invalid CUDA device ID: %s\n", optarg);
         exit(1);
@@ -111,7 +110,7 @@ void parseCLI(int argc, char **argv)
       abort();
     }
 
-  for (index = optind; index < argc; index++) {
+  for (int index = optind; index < argc; index++) {
     printf("Non-option argument %s\n", argv[index]);
   }
 }

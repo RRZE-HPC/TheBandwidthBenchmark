@@ -5,9 +5,6 @@
 #ifndef CLI_H
 #define CLI_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
 typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
 #define HELPTEXT                                                                         \
@@ -23,7 +20,7 @@ typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
 
 extern int CUDA_DEVICE;
 extern int type;
-extern int _SEQ;
+extern int SEQ;
 extern int data_init_type;
 extern size_t N;
 extern size_t ITERS;

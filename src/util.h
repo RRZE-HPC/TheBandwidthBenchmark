@@ -2,8 +2,8 @@
  * All rights reserved. This file is part of TheBandwidthBenchmark.
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
-#ifndef __UTIL_H_
-#define __UTIL_H_
+#ifndef UTIL_H_
+#define UTIL_H_
 
 #define HLINE                                                                            \
   "--------------------------------------------------------------------------"           \
