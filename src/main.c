@@ -13,10 +13,10 @@
 #include <unistd.h>
 
 #ifdef _OPENMP
+#include "affinity.h"
 #include <omp.h>
 #endif
 
-#include "affinity.h"
 #include "cli.h"
 #include "kernels.h"
 #include "profiler.h"
