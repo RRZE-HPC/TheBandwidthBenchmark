@@ -1,22 +1,12 @@
 # The Bandwidth Benchmark
 
-This is a collection of simple streaming kernels.
-
-Apart from the micro-benchmark functionality this is also a blueprint for other
-micro-benchmark applications.
-
-It contains C modules for:
-
-- Aligned data allocation
-- Query and control affinity settings
-- Accurate wall clock timing
-
-Moreover the benchmark showcases a simple generic Makefile that can be used in
-other projects.
-
-You may want to have a look at
+This is a collection of simple streaming kernels. Its primary purpose is to
+measure the maximum sustained main memory bandwidth of CPU and GPU systems.
+It also offers a mode to measure the complete memory
+hierarchy using sequential or parallel throughput execution.
+You may want to take a look at
 <https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki> for a collection of
-results that were created using TheBandwidthBenchmark.
+results created using TheBandwidthBenchmark.
 
 ## Overview
 
@@ -39,44 +29,54 @@ vectors, s is a scalar:
 
 ## Getting Started
 
-To build and run **The Bandwidth Benchmark**, you only need a compiler and GNU Make.
+To build and run **The Bandwidth Benchmark**, you only need a compiler and GNU
+make.
 
 1. **Install a supported compiler**
-   - GCC  
-   - Clang  
-   - Intel ICC/ICX  
+   - GCC
+   - Clang
+   - Intel ICC/ICX
    - NVCC (for CUDA builds)
 
 2. **Clone the repository**
-    ```sh
-    git clone https://github.com/RRZE-HPC/TheBandwidthBenchmark.git
 
-    cd TheBandwidthBenchmark
-    ```
+   ```sh
+   git clone https://github.com/RRZE-HPC/TheBandwidthBenchmark.git
+
+   cd TheBandwidthBenchmark
+   ```
+
 3. **(Optional) Adjust configuration**
-  
-    Edit `config.mk` to change problem size, enable OpenMP, set GPU launch parameters, etc.
+
+   Edit `config.mk` to change the default problem size, enable OpenMP, set GPU
+   launch parameters, etc.
 
 4. **Build**
 
-    CPU: `make`
+   CPU: `make`
 
-    GPU (set `TOOLCHAIN=NVCC` in `config.mk`): `make`
+   GPU (set `TOOLCHAIN=NVCC` in `config.mk`): `make`
 
-    More details in the full [Build](#build) section.
+   See the full [Build] (#build) section for more details.
 
-5. **Usage** 
-    ```sh
-    ./bwBench-<TOOLCHAIN>
-    ```
-    See the full [Usage](#usage) section. 
+5. **Usage**
 
-    *Help:*
-    ```sh
-    ./bwBench-<TOOLCHAIN> -h
-    ```
+   ```sh
+   ./bwBench-<TOOLCHAIN>
+   ```
+
+   See the full [Usage](#usage) section for more details.
+
+   Get _Help_ on command line arguments:
+
+   ```sh
+   ./bwBench-<TOOLCHAIN> -h
+   ```
+
 ## Build
+
 ### CPU Build
+
 1. Configure the tool chain and additional options in `config.mk`:
 
 ```make
@@ -85,8 +85,15 @@ TOOLCHAIN ?= GCC
 ENABLE_OPENMP ?= true
 ENABLE_LIKWID ?= false
 
+#Feature options
+# 4GB dataset for desktop systems
 OPTIONS  =  -DSIZE=125000000ull
-OPTIONS +=  -DNTIMES=10
+OPTIONS +=  -DNTIMES=100
+# 40GB dataset for server systems
+# OPTIONS  =  -DSIZE=1250000000ull
+# OPTIONS +=  -DNTIMES=10
+# Enable to enforce AVX512 streaming stores
+#OPTIONS +=  -DAVX512_INTRINSICS
 OPTIONS +=  -DARRAY_ALIGNMENT=64
 #OPTIONS +=  -DVERBOSE_AFFINITY
 #OPTIONS +=  -DVERBOSE_DATASIZE
@@ -94,17 +101,21 @@ OPTIONS +=  -DARRAY_ALIGNMENT=64
 ```
 
 The verbosity options enable detailed output about affinity settings, allocation
-sizes and timer resolution. If you uncomment `DVERBOSE_AFFINITY` the processor
-every thread is currently scheduled on and the complete affinity mask for every
-thread is printed.
+sizes, and timer resolution. If you uncomment `-DVERBOSE_AFFINITY` the processor
+id every thread is currently scheduled on and the complete affinity mask for
+every thread is printed.
 
 _Notice:_ OpenMP involves significant overhead through barrier cost, especially
-on systems with many memory domains. The default problem size is set to almost
-4GB to have enough work vs overhead. If you suspect that the result should be
-better you may try to further increase the problem size. To compare to original
-stream results on X86 systems you have to ensure that streaming store
-instructions are used. For the ICC tool chain this is now the default (Option
-`-qopt-streaming-stores=always`).
+on systems with many memory domains. The default problem size is set to 4GB to
+have enough work vs overhead. If you suspect that the result should be better
+you may try to further increase the problem size. This can be done either by
+change the `SIZE` define or using the command line option `-s <SIZE>`. To
+compare to original stream results on X86 systems you have to ensure that
+streaming store instructions are used. For the ICC tool chain this is the
+default (Option `-qopt-streaming-stores=always`). If the configured tool chain
+does not generate streaming stores you can comment out `-DAVX512_INTRINSICS` on
+processors that support AVX512. This enables to use intrinsics instead of
+compiler generated code.
 
 - Build with:
 
@@ -138,16 +149,17 @@ make asm
 
 The assembler files will also be located in the `./build/<TOOLCHAIN>` directory.
 
-Reformat all source files using `clang-format`. This only works if
-`clang-format` is in your path.
+Reformat all source files using `clang-format` (only works if `clang-format` is
+in your path):
 
 ```sh
 make format
 ```
----
+
 ### GPU Build (NVIDIA CUDA)
 
-When building bwBench with CUDA support, several compile-time parameters can be tuned to optimize performance on different NVIDIA GPU architectures.
+When building bwBench with CUDA support, several compile-time parameters can be
+tuned to optimize performance on different NVIDIA GPU architectures.
 
 ```make
 # Supported: GCC, CLANG, ICX, NVCC
@@ -166,18 +178,20 @@ OPTIONS +=  -DTHREADBLOCKPERSM=2
 
 ##### `THREADBLOCKSIZE` (default = 1024)
 
-Defines the CUDA thread block size used for the benchmark kernels (i.e., the number of threads per block).
+Defines the CUDA thread block size used for the benchmark kernels (i.e., the
+number of threads per block).
 
-- Typical values: 128, 256, 512, 1024  
-- Larger block sizes may improve occupancy for some architectures, but not all GPUs benefit equally.  
+- Typical values: 128, 256, 512, 1024
+- Larger block sizes may improve occupancy for some architectures, but not all GPUs benefit equally.
 - This parameter **has the highest priority** when determining the kernel launch configuration.
 
 ##### `THREADBLOCKPERSM` (default = 2)
 
-Defines the *requested* number of thread blocks per Streaming Multiprocessor (SM).  
-This allows you to control occupancy and tailor the workload to your specific GPU.
+Defines the _requested_ number of thread blocks per Streaming Multiprocessor
+(SM). This allows you to control occupancy and tailor the workload to your
+specific GPU.
 
-- Example: setting `THREADBLOCKPERSM=2` requests that the runtime attempt to schedule two blocks per SM.  
+- Example: setting `THREADBLOCKPERSM=2` requests that the runtime attempt to schedule two blocks per SM.
 
 ---
 
@@ -185,12 +199,12 @@ This allows you to control occupancy and tailor the workload to your specific GP
 
 `THREADBLOCKSIZE` **always takes precedence** when determining kernel execution parameters:
 
-1. The program first attempts to launch kernels with the given `THREADBLOCKSIZE`.  
-2. It then checks whether the GPU can support the requested `THREADBLOCKPERSM` with that block size.  
-3. **If the target `THREADBLOCKPERSM` is achievable** given hardware limits and the selected `THREADBLOCKSIZE`, the program uses it.  
-4. **If not**, the program automatically falls back to the *maximum feasible* blocks per SM for the given thread block size.
+1. The program first attempts to launch kernels with the given `THREADBLOCKSIZE`.
+2. It then checks whether the GPU can support the requested `THREADBLOCKPERSM` with that block size.
+3. **If the target `THREADBLOCKPERSM` is achievable** given hardware limits and the selected `THREADBLOCKSIZE`, the program uses it.
+4. **If not**, the program automatically falls back to the _maximum feasible_ blocks per SM for the given thread block size.
 
-## Support for clang language server
+## Support for clangd language server
 
 The Makefile will generate a `.clangd` configuration to correctly set all
 options for the clang language server. This is only important if you use an
@@ -203,7 +217,7 @@ versions can be easily installed on MacOS using the
 
 An alternative is to use [Bear](https://github.com/rizsotto/Bear), a tool that
 generates a compilation database for clang tooling. This method also will enable
-to jump to any definition without a previously opened buffer. You have to build
+to jump to any definition without previously opened buffer. You have to build
 TheBandwidthBenchmark one time with Bear as a wrapper:
 
 ```sh
@@ -220,27 +234,27 @@ To run the benchmark call:
 
 ### Command Line Arguments
 
-`NOTICE:` Command Line Arguments overrides the **OPTIONS** set in `config.mk`
+`NOTICE:` Command Line Arguments override the **OPTIONS** set in `config.mk`
 
 | Option | Argument     | Description                                                                                                                 |
 | ------ | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `-h`   | —            | Show help text.                                                                                                             |
-| `-m`   | `<type>`     | *(CPU only)* Benchmark type. Valid values:<br>• `ws` — Worksharing (default)<br>• `tp` — Throughput<br>• `seq` — Sequential |
+| `-m`   | `<type>`     | _(CPU only)_ Benchmark type. Valid values:<br>• `ws` — Worksharing (default)<br>• `tp` — Throughput<br>• `seq` — Sequential |
 | `-s`   | `<long int>` | Size (in GB) of the allocated vectors.                                                                                      |
 | `-n`   | `<long int>` | Number of iterations.                                                                                                       |
 | `-i`   | `<type>`     | Data initialization type. Valid values:<br>• `constant` (default) <br>• `random`                                            |
-| `-p`   | `<type>`     | OpenMP Pinning type. Valid values:<br>• `compact` (default) <br>• `off`                                                     |
-| `-d`   | `<int>`      | *(GPU-enabled builds only)* GPU ID on which the program should run. (default = 0)                                           |
-| `-tb`  | `<int>`      | *(GPU-enabled builds only)* Thread Block Size (default = 1024)                                                              |
-| `-tsm` | `<int>`      | *(GPU-enabled builds only)* Thread Block per SM. (default = 2)                                                              |
+| `-p`   | `<type>`     | OpenMP Pinning type. Valid values:<br>• `compact`<br>• `off` (default)                                                      |
+| `-d`   | `<int>`      | _(GPU-enabled builds only)_ GPU ID on which the program should run. (default = 0)                                           |
+| `-tb`  | `<int>`      | _(GPU-enabled builds only)_ Thread Block Size (default = 1024)                                                              |
+| `-tsm` | `<int>`      | _(GPU-enabled builds only)_ Thread Block per SM. (default = 2)                                                              |
 
-
-In default mode the benchmark will output the results similar to the stream
-benchmark. Results are validated. 
+In default mode the benchmark will output the results similar to the STREAM
+benchmark. Results are validated.
 
 ### Thread pinning
-For threaded execution it is recommended to
-control thread affinity. We recommend to use `likwid-pin` for setting the number of threads used and to
+
+For threaded execution it is recommended to control thread affinity. We
+recommend to use `likwid-pin` for setting the number of threads used and to
 control thread affinity:
 
 ```sh
@@ -273,10 +287,13 @@ SDaxpy:        46822.63    23411.32      0.0281       0.0273       0.0325
 Solution Validates
 ```
 
+If `likwid-pin` is not available you can use the command line argument `-p
+compact` to enable internal pinning using the `OMP_PLACES` pragma.
+
 ## Scaling runs
 
 Apart from the highest sustained memory bandwidth also the scaling behavior
-within memory domains is a important system property.
+within memory domains is an important system property.
 
 There is a helper script downloadable at
 <https://github.com/RRZE-HPC/TheBandwidthBenchmark/wiki/util/extractResults.pl>
@@ -333,10 +350,11 @@ sequential (call with `seq` mode option) and throughput (call with `tp` mode
 option). These are intended for scanning the complete memory hierarchy instead
 of only the main memory domain. See below for details on how to use those modes.
 
-**NOTICE:** The `seq` and `tp` modes may take up to 30m or more, depending on the
-system.
+**NOTICE:** The `seq` and `tp` modes may take up to 30m or more, depending on
+the system.
 
-These 2 modes performs a sweep over different array sizes ranging from N = 100 till the **array size N** specified in `config.mk`.
+These 2 modes performs a sweep over different array sizes ranging from N = 100
+until the **array size N** specified in `config.mk`.
 
 - **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all kernels. Command to run in sequential mode:
 
@@ -351,7 +369,7 @@ These 2 modes performs a sweep over different array sizes ranging from N = 100 t
 ./bwBench-<TOOLCHAIN> -m tp
 ```
 
-Each of these modes output the results for each individual kernel. 
+Each of these modes output the results for each individual kernel.
 
 The output files will be created in the `./dat` directory.
 
@@ -359,10 +377,10 @@ The output files will be created in the `./dat` directory.
 
 `Required:` **Gnuplot 5.2+**
 
-The user can visualize the outputs from `./dat` directory using the provided
+The user can visualize the outputs from the `./dat` directory using the provided
 gnuplot scripts. The scripts are located in `./gnuplot_script` directory where a
 bash file takes care of generating and executing the gnuplot commands. The plots
-from gnuplot can then be found in `./plot` directory.
+can then be found in the `./plot` directory.
 
 There are 2 ways you can visualize the output:
 
@@ -389,11 +407,12 @@ The script also generates a combined plot with bandwidths from all the kernels
 into one plot.
 
 ## Caveats
-A few known caveats to the user, based on the experience with the compilers.
+
+A few known issues, based on the experience with specific compilers.
 
 - Intel oneAPI DPC++/C++ Compiler 2023.2.0 (icx/icpx compiler):
-  - NonTemporal Stores (aka Streaming Stores): We leave the choice to the user whether to use NT stores or not. 
-    - If the user wants to use NT stores using `-qopt-streaming-stores=always` compiler flag, then the user has to avoid using the `-ffreestanding` compiler flag. This will not generate NT instructions, but generates calls to `__libirc_nontemporal_store@PLT` in the assembly. 
+  - NonTemporal Stores (aka Streaming Stores): We leave the choice to the user whether to use NT stores or not.
+    - If the user wants to use NT stores using `-qopt-streaming-stores=always` compiler flag, then the user has to avoid using the `-ffreestanding` compiler flag. This will not generate NT instructions, but generates calls to `__libirc_nontemporal_store@PLT` in the assembly.
     - For the Througput mode with OpenMP, the icx/icpx compiler does not respect the `nontemporal()` clause with the OpenMP `simd` directive.
 
-    It's recommended not to use NT stores if the user wants to observe cache hierarchy when using the Sequential or Throughput mode.
+    It's recommended not to use NT stores if the user wants to measure cache hierarchy bandwidth using the Sequential or Throughput mode.
