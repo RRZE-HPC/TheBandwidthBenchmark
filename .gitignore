@@ -57,3 +57,4 @@ Module.symvers
 Mkfile.old
 dkms.conf
 .cache/clangd/index
+compile_commands.json
