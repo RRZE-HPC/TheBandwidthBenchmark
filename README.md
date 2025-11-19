@@ -37,17 +37,55 @@ vectors, s is a scalar:
 - striad (L3, S1, WA): Schoenauer triad: `a = b + c * d`.
 - sdaxpy (L3, S1): Schoenauer triad without write allocate: `a = a + b * c`.
 
-## Build
+## Getting Started
 
+To build and run **The Bandwidth Benchmark**, you only need a compiler and GNU Make.
+
+1. **Install a supported compiler**
+   - GCC  
+   - Clang  
+   - Intel ICC/ICX  
+   - NVCC (for CUDA builds)
+
+2. **Clone the repository**
+    ```sh
+    git clone https://github.com/RRZE-HPC/TheBandwidthBenchmark.git
+
+    cd TheBandwidthBenchmark
+    ```
+3. **(Optional) Adjust configuration**
+  
+    Edit `config.mk` to change problem size, enable OpenMP, set GPU launch parameters, etc.
+
+4. **Build**
+
+    CPU: `make`
+
+    GPU (set `TOOLCHAIN=NVCC` in `config.mk`): `make`
+
+    More details in the full [Build](#build) section.
+
+5. **Usage** 
+    ```sh
+    ./bwBench-<TOOLCHAIN>
+    ```
+    See the full [Usage](#usage) section. 
+
+    *Help:*
+    ```sh
+    ./bwBench-<TOOLCHAIN> -h
+    ```
+## Build
+### CPU Build
 1. Configure the tool chain and additional options in `config.mk`:
 
 ```make
 # Supported: GCC, CLANG, ICC, ICX
-TOOLCHAIN ?= CLANG
-ENABLE_OPENMP ?= false
+TOOLCHAIN ?= GCC
+ENABLE_OPENMP ?= true
 ENABLE_LIKWID ?= false
 
-OPTIONS  =  -DSIZE=120000000ull
+OPTIONS  =  -DSIZE=125000000ull
 OPTIONS +=  -DNTIMES=10
 OPTIONS +=  -DARRAY_ALIGNMENT=64
 #OPTIONS +=  -DVERBOSE_AFFINITY
@@ -106,8 +144,8 @@ Reformat all source files using `clang-format`. This only works if
 ```sh
 make format
 ```
-
-### NVIDIA GPU specific build parameters
+---
+### GPU Build (NVIDIA CUDA)
 
 When building bwBench with CUDA support, several compile-time parameters can be tuned to optimize performance on different NVIDIA GPU architectures.
 
@@ -152,19 +190,6 @@ This allows you to control occupancy and tailor the workload to your specific GP
 3. **If the target `THREADBLOCKPERSM` is achievable** given hardware limits and the selected `THREADBLOCKSIZE`, the program uses it.  
 4. **If not**, the program automatically falls back to the *maximum feasible* blocks per SM for the given thread block size.
 
-## Command Line Arguments
-
-| Option | Argument     | Description                                                                                                   |
-| ------ | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| `-h`   | —            | Show help text.                                                                                               |
-| `-m`   | `<type>`     | Benchmark type. Valid values:<br>• `ws` — Worksharing (default)<br>• `tp` — Throughput<br>• `seq` — Sequential |
-| `-s`   | `<long int>` | Size (in GB) of the allocated vectors.                                                                        |
-| `-n`   | `<long int>` | Number of iterations.                                                                                         |
-| `-i`   | `<type>`     | Data initialization type. Valid values:<br>• `constant` (default) <br>• `random`                                         |
-| `-d`   | `<int>`      | *(GPU-enabled builds only)* GPU ID on which the program should run. (default = 0)|
-
-
-
 ## Support for clang language server
 
 The Makefile will generate a `.clangd` configuration to correctly set all
@@ -190,23 +215,32 @@ bear -- make
 To run the benchmark call:
 
 ```sh
-./bwBench-<TOOLCHAIN> <Command Line Arguments>
+./bwBench-<TOOLCHAIN> [Command-Line-Arguments]
 ```
 
-Apart from the default parallel work sharing mode with fixed problem size
-TheBandwidthBenchmark also supports two modes with varying problem sizes:
-sequential (call with `seq` mode option) and throughput (call with `tp` mode
-option). These are intended for scanning the complete memory hierarchy instead
-of only the main memory domain. See below for details on how to use those modes.
+### Command Line Arguments
 
-**NOTICE:** The `seq` and `tp` modes may take up to 30m or more, depending on the
-system.
+`NOTICE:` Command Line Arguments overrides the **OPTIONS** set in `config.mk`
+
+| Option | Argument     | Description                                                                                                                 |
+| ------ | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `-h`   | —            | Show help text.                                                                                                             |
+| `-m`   | `<type>`     | *(CPU only)* Benchmark type. Valid values:<br>• `ws` — Worksharing (default)<br>• `tp` — Throughput<br>• `seq` — Sequential |
+| `-s`   | `<long int>` | Size (in GB) of the allocated vectors.                                                                                      |
+| `-n`   | `<long int>` | Number of iterations.                                                                                                       |
+| `-i`   | `<type>`     | Data initialization type. Valid values:<br>• `constant` (default) <br>• `random`                                            |
+| `-p`   | `<type>`     | OpenMP Pinning type. Valid values:<br>• `compact` (default) <br>• `off`                                                     |
+| `-d`   | `<int>`      | *(GPU-enabled builds only)* GPU ID on which the program should run. (default = 0)                                           |
+| `-tb`  | `<int>`      | *(GPU-enabled builds only)* Thread Block Size (default = 1024)                                                              |
+| `-tsm` | `<int>`      | *(GPU-enabled builds only)* Thread Block per SM. (default = 2)                                                              |
+
 
 In default mode the benchmark will output the results similar to the stream
-benchmark. Results are validated. For threaded execution it is recommended to
-control thread affinity.
+benchmark. Results are validated. 
 
-We recommend to use `likwid-pin` for setting the number of threads used and to
+### Thread pinning
+For threaded execution it is recommended to
+control thread affinity. We recommend to use `likwid-pin` for setting the number of threads used and to
 control thread affinity:
 
 ```sh
@@ -293,31 +327,37 @@ depends on the frequency settings.
 
 ## Sequential vs Throughput mode: Sweeping over a range of problem size
 
-TheBandwidthBenchmark comes in 2 additional variants: Sequential and Throughput.
-These 2 modes performs a sweep over different array sizes ranging from N = 100
-till the array size N specified in `config.mk`.
+Apart from the default parallel work sharing mode with fixed problem size
+TheBandwidthBenchmark also supports two modes with varying problem sizes:
+sequential (call with `seq` mode option) and throughput (call with `tp` mode
+option). These are intended for scanning the complete memory hierarchy instead
+of only the main memory domain. See below for details on how to use those modes.
 
-- **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all
-  kernels. Command to run in sequential mode:
+**NOTICE:** The `seq` and `tp` modes may take up to 30m or more, depending on the
+system.
+
+These 2 modes performs a sweep over different array sizes ranging from N = 100 till the **array size N** specified in `config.mk`.
+
+- **Sequential** - Runs TheBandwidthBenchmark in sequential mode for all kernels. Command to run in sequential mode:
 
 ```sh
 ./bwBench-<TOOLCHAIN> -m seq
 ```
 
-- **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded
-  mode for all kernels. Requires flag **ENABLE_OPENMP=true** in `config.mk`.
+- **Throughput (Multi-threaded)** - Runs TheBandwidthBenchmark in multi-threaded mode for all kernels. Requires flag **ENABLE_OPENMP=true** in `config.mk`.
   Command to run in throughput mode:
 
 ```sh
 ./bwBench-<TOOLCHAIN> -m tp
 ```
 
-Each of these modes output the results for each individual kernel. The output
-files will be created in the `./dat` directory.
+Each of these modes output the results for each individual kernel. 
+
+The output files will be created in the `./dat` directory.
 
 ### Visualizing the data from the Sequential/Throughput modes
 
-Required: Gnuplot 5.2+
+`Required:` **Gnuplot 5.2+**
 
 The user can visualize the outputs from `./dat` directory using the provided
 gnuplot scripts. The scripts are located in `./gnuplot_script` directory where a
