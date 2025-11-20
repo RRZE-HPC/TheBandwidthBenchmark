@@ -11,19 +11,26 @@
 
 #include "cli.h"
 
-int CUDA_DEVICE    = 0;
-int type           = WS;
+int TYPE           = WS;
 int SEQ            = 0;
-int data_init_type = 0;
+int DATA_INIT_TYPE = 0;
 size_t N           = 125000000ull;
 size_t ITERS       = 10;
+
+#ifdef _NVCC
+int CUDA_DEVICE             = 0;
+int THREAD_BLOCK_PER_SM     = 1024;
+int THREAD_BLOCK_SIZE       = 2;
+int THREAD_BLOCK_SIZE_SET   = 0;
+int THREAD_BLOCK_PER_SM_SET = 0;
+#endif
 
 void parseCLI(int argc, char **argv)
 {
   int co;
   opterr = 0;
 
-  while ((co = getopt(argc, argv, "hm:s:n:i:d:")) != -1)
+  while ((co = getopt(argc, argv, "hm:s:n:i:d:p:t:b:")) != -1)
     switch (co) {
     case 'h': {
       printf(HELPTEXT);
@@ -33,12 +40,12 @@ void parseCLI(int argc, char **argv)
 
     case 'm': {
       if (strcmp(optarg, "ws") == 0)
-        type = WS;
+        TYPE = WS;
       else if (strcmp(optarg, "tp") == 0) {
-        type = TP;
+        TYPE = TP;
         SEQ  = 0;
       } else if (strcmp(optarg, "seq") == 0) {
-        type = SQ;
+        TYPE = SQ;
         SEQ  = 1;
       } else {
         printf("Unknown bench type %s\n", optarg);
@@ -71,9 +78,9 @@ void parseCLI(int argc, char **argv)
 
     case 'i': {
       if (strcmp(optarg, "constant") == 0)
-        data_init_type = 0;
+        DATA_INIT_TYPE = 0;
       else if (strcmp(optarg, "random") == 0) {
-        data_init_type = 1;
+        DATA_INIT_TYPE = 1;
       } else {
         printf("Invalid data initialization type %s\n", optarg);
         exit(1);
@@ -81,6 +88,7 @@ void parseCLI(int argc, char **argv)
       break;
     }
 
+#ifdef _NVCC
     case 'd': {
       char *end;
       errno          = 0;
@@ -89,12 +97,37 @@ void parseCLI(int argc, char **argv)
         fprintf(stderr, "Invalid CUDA device ID: %s\n", optarg);
         exit(1);
       }
-#ifdef _NVCC
       CUDA_DEVICE = (int)val;
-#endif
 
       break;
     }
+
+    case 't': {
+      char *end;
+      errno          = 0;
+      const long val = strtol(optarg, &end, 10);
+      if (*end != '\0' || errno != 0 || val < 0 || val > INT_MAX) {
+        fprintf(stderr, "Invalid Thread Block Size: %s\n", optarg);
+        exit(1);
+      }
+      THREAD_BLOCK_SIZE     = (int)val;
+      THREAD_BLOCK_SIZE_SET = 1;
+      break;
+    }
+
+    case 'b': {
+      char *end;
+      errno          = 0;
+      const long val = strtol(optarg, &end, 10);
+      if (*end != '\0' || errno != 0 || val < 0 || val > INT_MAX) {
+        fprintf(stderr, "Invalid Thread Blocks per SM: %s\n", optarg);
+        exit(1);
+      }
+      THREAD_BLOCK_PER_SM     = (int)val;
+      THREAD_BLOCK_PER_SM_SET = 1;
+      break;
+    }
+#endif
 
     case '?': {
       if (optopt == 'c')

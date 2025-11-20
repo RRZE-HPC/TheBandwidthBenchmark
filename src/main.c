@@ -46,11 +46,13 @@ int main(const int argc, char **argv)
   size_t num_threads = 1;
 
 #ifdef _OPENMP
+
 #pragma omp parallel
   {
 #pragma omp single
     num_threads = omp_get_num_threads();
   }
+
 #endif
 
   const int base = (N + num_threads - 1) / num_threads;
@@ -70,6 +72,7 @@ int main(const int argc, char **argv)
   printf("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
+
   printf(HLINE);
   _Pragma("omp parallel")
   {
@@ -98,7 +101,7 @@ int main(const int argc, char **argv)
   const double scalar = 0.1;
 
 #ifndef _NVCC
-  if (type == TP || type == SQ) {
+  if (TYPE == TP || TYPE == SQ) {
     printf("Running memory hierarchy sweeps\n");
 
     for (int j = 0; j < NUMREGIONS; j++) {
@@ -171,7 +174,7 @@ void check(const double *a,
     const size_t N,
     const size_t ITERS)
 {
-  if (data_init_type == 1) {
+  if (DATA_INIT_TYPE == 1) {
     return;
   }
 
