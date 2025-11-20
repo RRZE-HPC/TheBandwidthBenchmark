@@ -20,12 +20,19 @@ typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
   "  -d <int>        (If GPU enabled) GPU ID on which you want your program "            \
   "to run\n"
 
-extern int CUDA_DEVICE;
-extern int type;
+extern int TYPE;
 extern int SEQ;
-extern int data_init_type;
 extern size_t N;
 extern size_t ITERS;
+extern int DATA_INIT_TYPE;
+
+#ifdef _NVCC
+extern int CUDA_DEVICE;
+extern int THREAD_BLOCK_SIZE;
+extern int THREAD_BLOCK_SIZE_SET;
+extern int THREAD_BLOCK_PER_SM;
+extern int THREAD_BLOCK_PER_SM_SET;
+#endif
 
 extern void parseCLI(int, char **);
 

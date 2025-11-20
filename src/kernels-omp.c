@@ -74,9 +74,9 @@ void initRandoms(double *a, double *b, double *c, double *d, const size_t N)
 void initArrays(double *a, double *b, double *c, double *d, const size_t N)
 {
 
-  if (data_init_type == 0) {
+  if (DATA_INIT_TYPE == 0) {
     initConstants(a, b, c, d, N);
-  } else if (data_init_type == 1) {
+  } else if (DATA_INIT_TYPE == 1) {
     initRandoms(a, b, c, d, N);
   }
 }
