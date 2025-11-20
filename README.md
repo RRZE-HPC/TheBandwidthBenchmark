@@ -57,7 +57,7 @@ make.
 
    GPU (set `TOOLCHAIN=NVCC` in `config.mk`): `make`
 
-   See the full [Build] (#build) section for more details.
+   See the full [Build](#build) section for more details.
 
 5. **Usage**
 
