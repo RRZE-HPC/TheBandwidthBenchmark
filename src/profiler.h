@@ -4,10 +4,11 @@
  * license that can be found in the LICENSE file. */
 #ifndef __PROFILER_H_
 #define __PROFILER_H_
-#include "likwid-marker.h"
 #include <stddef.h>
 
 #ifdef _OPENMP
+#include "likwid-marker.h"
+
 #define PROFILE(tag, call)                                                               \
   _Pragma("omp parallel")                                                                \
   {                                                                                      \
@@ -35,12 +36,13 @@ typedef enum {
   NUMREGIONS
 } regions;
 
-extern double _t[NUMREGIONS][NTIMES];
-extern int _SEQ;
+extern double **_t;
+extern void allocateTimer();
+extern void freeTimer();
 extern void profilerInit();
 extern void profilerPrint(size_t size);
 extern void profilerOpenFile(int region);
 extern void profilerCloseFile(void);
-extern void profilerPrintLine(size_t N, int iter, int j);
+extern void profilerPrintLine(size_t N, size_t iter, int j);
 
 #endif // __PROFILER_H

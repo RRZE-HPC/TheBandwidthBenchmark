@@ -5,16 +5,14 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "allocate.h"
 
-void *allocate(size_t alignment, size_t bytesize)
+void *allocate(const size_t alignment, const size_t bytesize)
 {
-  int errorCode;
   void *ptr;
 
-  errorCode = posix_memalign(&ptr, alignment, bytesize);
+  const int errorCode = posix_memalign(&ptr, alignment, bytesize);
 
   if (errorCode) {
     if (errorCode == EINVAL) {

@@ -3,6 +3,9 @@
  * Use of this source code is governed by a MIT style
  * license that can be found in the LICENSE file. */
 #ifdef __linux__
+
+#ifdef _OPENMP
+
 #include <pthread.h>
 #include <sched.h>
 #include <stdio.h>
@@ -71,4 +74,5 @@ void affinity_getmask(void)
   printf("\n");
 }
 
+#endif /*_OPENMP*/
 #endif /*__linux__*/

@@ -10,6 +10,8 @@
 #include <omp.h>
 #endif
 
+#include "cli.h"
+#include "likwid-marker.h"
 #include "profiler.h"
 #include "util.h"
 
@@ -19,11 +21,9 @@ typedef struct {
   size_t flops;
 } workType;
 
-double _t[NUMREGIONS][NTIMES];
-int _SEQ                             = 0;
-
+// double _t[NUMREGIONS][ITERS];
+double **_t;
 FILE *profilerFile                   = NULL;
-
 char *dat_directory                  = "dat\0";
 
 static workType _regions[NUMREGIONS] = {
@@ -53,22 +53,36 @@ void profilerInit(void)
   }
 }
 
-static void computeStats(double *avgtime, double *maxtime, double *mintime, int j)
+static void computeStats(double *avgtime, double *maxtime, double *mintime, const int j)
 {
   *avgtime = 0;
   *maxtime = 0;
   *mintime = FLT_MAX;
 
-  for (int k = 1; k < NTIMES; k++) {
+  for (int k = 1; k < ITERS; k++) {
     *avgtime += _t[j][k];
     *mintime = MIN(*mintime, _t[j][k]);
     *maxtime = MAX(*maxtime, _t[j][k]);
   }
 
-  *avgtime /= (double)(NTIMES - 1);
+  *avgtime /= (double)(ITERS - 1);
 }
 
-void profilerOpenFile(int region)
+void allocateTimer()
+{
+  _t = malloc(NUMREGIONS * sizeof(double *));
+  for (int i = 0; i < NUMREGIONS; i++)
+    _t[i] = malloc(ITERS * sizeof(double));
+}
+
+void freeTimer()
+{
+  for (int i = 0; i < NUMREGIONS; i++)
+    free(_t[i]);
+  free(_t);
+}
+
+void profilerOpenFile(const int region)
 {
   char filename[40];
   sprintf(filename, "%s/%s.dat", dat_directory, _regions[region].label);
@@ -99,7 +113,7 @@ void profilerCloseFile(void)
   fclose(profilerFile);
 }
 
-void profilerPrintLine(size_t N, int iter, int j)
+void profilerPrintLine(const size_t N, const size_t iter, const int j)
 {
   size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
@@ -107,7 +121,7 @@ void profilerPrintLine(size_t N, int iter, int j)
   int num_threads = 1;
 
 #ifdef _OPENMP
-  if (!_SEQ) {
+  if (!SEQ) {
     _Pragma("omp parallel")
     {
       num_threads = omp_get_num_threads();
@@ -145,12 +159,12 @@ void profilerPrintLine(size_t N, int iter, int j)
   }
 }
 
-void profilerPrint(size_t N)
+void profilerPrint(const size_t N)
 {
-  size_t bytesPerWord = sizeof(double);
   double avgtime, maxtime, mintime;
 
 #ifdef VERBOSE_DATASIZE
+  size_t bytesPerWord = sizeof(double);
   printf(HLINE);
   printf("Dataset sizes\n");
   for (int i = 0; i < NUMREGIONS; i++) {
@@ -166,8 +180,8 @@ void profilerPrint(size_t N)
 
   for (int j = 0; j < NUMREGIONS; j++) {
     computeStats(&avgtime, &maxtime, &mintime, j);
-    double bytes = (double)_regions[j].words * sizeof(double) * N;
-    double flops = (double)_regions[j].flops * N;
+    const double bytes = (double)_regions[j].words * sizeof(double) * N;
+    const double flops = (double)_regions[j].flops * N;
 
     if (flops > 0) {
       printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
