@@ -22,47 +22,55 @@
 #include "profiler.h"
 #include "util.h"
 
-static void check(
-    const double *, const double *, const double *, const double *, size_t, size_t);
-static void kernelSwitch(double *,
-    const double *,
-    const double *,
-    const double *,
-    double,
-    size_t,
-    size_t,
-    size_t,
-    int);
+static void check(const double * /*a*/,
+    const double * /*b*/,
+    const double * /*c*/,
+    const double * /*d*/,
+    size_t /*N*/,
+    size_t /*ITERS*/);
+
+static void kernelSwitch(double * /*a*/,
+    const double * /*b*/,
+    const double * /*c*/,
+    const double * /*d*/,
+    double /*scalar*/,
+    size_t /*N*/,
+    size_t /*ITERS*/,
+    size_t /*iter*/,
+    int /*j*/);
 
 int main(const int argc, char **argv)
 {
   const size_t bytesPerWord = sizeof(double);
 
   // Data initialization from config.mk
-  N     = SIZE;
-  ITERS = NTIMES;
+  N    = SIZE;
+  Iter = NTIMES;
 
   // ensure N is divisible by 8
-  size_t num_threads = 1;
+  size_t numThreads = 1;
 
 #ifdef _OPENMP
 
 #pragma omp parallel
   {
 #pragma omp single
-    num_threads = omp_get_num_threads();
+    numThreads = omp_get_num_threads();
   }
 
 #endif
 
-  const int base = (N + num_threads - 1) / num_threads;
-  N              = ((base + 7) & ~7) * num_threads;
+  const size_t base = (N + numThreads - 1) / numThreads;
+  N                 = ((base + 7) & ~7) * numThreads;
 
-  double *a, *b, *c, *d;
+  double *a;
+  double *b;
+  double *c;
+  double *d;
 
   profilerInit();
 
-  parseCLI(argc, argv);
+  parseArguments(argc, argv);
 
   allocateTimer();
 
@@ -72,17 +80,16 @@ int main(const int argc, char **argv)
   printf("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
 
 #ifdef _OPENMP
-
   printf(HLINE);
-  _Pragma("omp parallel")
+  _Pragma("omp parallel default(none)")
   {
-    int k = omp_get_num_threads();
-    int i = omp_get_thread_num();
+    int numThreads = omp_get_num_threads();
 
 #pragma omp single
-    printf("OpenMP enabled, running with %d threads\n", k);
+    printf("OpenMP enabled, running with %d threads\n", numThreads);
 
 #ifdef VERBOSE_AFFINITY
+    int i = omp_get_thread_num();
 #pragma omp barrier
 #pragma omp critical
     {
@@ -101,22 +108,22 @@ int main(const int argc, char **argv)
   const double scalar = 0.1;
 
 #ifndef _NVCC
-  if (TYPE == TP || TYPE == SQ) {
+  if (Type == TP || Type == SQ) {
     printf("Running memory hierarchy sweeps\n");
 
     for (int j = 0; j < NUMREGIONS; j++) {
-      N = 100;
+      size_t problemSize = 100;
 
       profilerOpenFile(j);
 
-      while (N < SIZE) {
+      while (problemSize < SIZE) {
 
         double newtime = 0.0;
         double oldtime = 0.0;
         size_t iter    = 2;
 
         while (newtime < 0.3) {
-          newtime = striad_seq(a, b, c, d, N, iter);
+          newtime = striad_seq(a, b, c, d, problemSize, iter);
           if (newtime > 0.1) {
             break;
           }
@@ -127,10 +134,10 @@ int main(const int argc, char **argv)
           }
         }
 
-        kernelSwitch(a, b, c, d, scalar, N, ITERS, iter, j);
+        kernelSwitch(a, b, c, d, scalar, problemSize, Iter, iter, j);
 
-        profilerPrintLine(N, iter, j);
-        N = ((double)N * 1.2);
+        profilerPrintLine(problemSize, iter, j);
+        problemSize = ((double)problemSize * 1.2);
       }
 
       profilerCloseFile();
@@ -139,8 +146,7 @@ int main(const int argc, char **argv)
   }
 #endif
 
-  for (int k = 0; k < ITERS; k++) {
-
+  for (int k = 0; k < Iter; k++) {
     PROFILE(INIT, init(b, scalar, N));
 #ifdef _NVCC
     PROFILE(SUM, sum(a, N));
@@ -158,7 +164,7 @@ int main(const int argc, char **argv)
   }
 
 #ifndef _NVCC
-  check(a, b, c, d, N, ITERS);
+  check(a, b, c, d, N, Iter);
 #endif
   profilerPrint(N);
 
@@ -174,7 +180,7 @@ void check(const double *a,
     const size_t N,
     const size_t ITERS)
 {
-  if (DATA_INIT_TYPE == 1) {
+  if (DataInitVariant == 1) {
     return;
   }
 
@@ -192,10 +198,10 @@ void check(const double *a,
     bj                  = scalar;
     cj                  = aj;
     aj                  = aj * scalar;
-    aj                  = bj + scalar * cj;
-    aj                  = aj + scalar * bj;
-    aj                  = bj + cj * dj;
-    aj                  = aj + bj * cj;
+    aj                  = bj + (scalar * cj);
+    aj                  = aj + (scalar * bj);
+    aj                  = bj + (cj * dj);
+    aj                  = aj + (bj * cj);
   }
 
   aj          = aj * (double)(N);
@@ -257,97 +263,97 @@ void kernelSwitch(double *restrict a,
 {
   switch (j) {
   case INIT:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[INIT][k] = init_seq(a, scalar, N, iter);
+        Timings[INIT][k] = init_seq(a, scalar, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[INIT][k] = init_tp(a, scalar, N, iter);
+        Timings[INIT][k] = init_tp(a, scalar, N, iter);
       }
     }
     break;
 
   case SUM:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[SUM][k] = sum_seq(a, N, iter);
+        Timings[SUM][k] = sum_seq(a, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[SUM][k] = sum_tp(a, N, iter);
+        Timings[SUM][k] = sum_tp(a, N, iter);
       }
     }
     break;
 
   case COPY:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[COPY][k] = copy_seq(a, b, N, iter);
+        Timings[COPY][k] = copy_seq(a, b, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[COPY][k] = copy_tp(a, b, N, iter);
+        Timings[COPY][k] = copy_tp(a, b, N, iter);
       }
     }
     break;
 
   case UPDATE:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[UPDATE][k] = update_seq(a, scalar, N, iter);
+        Timings[UPDATE][k] = update_seq(a, scalar, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[UPDATE][k] = update_tp(a, scalar, N, iter);
+        Timings[UPDATE][k] = update_tp(a, scalar, N, iter);
       }
     }
     break;
 
   case TRIAD:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
+        Timings[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[TRIAD][k] = triad_tp(a, b, c, scalar, N, iter);
+        Timings[TRIAD][k] = triad_tp(a, b, c, scalar, N, iter);
       }
     }
     break;
 
   case DAXPY:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
+        Timings[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[DAXPY][k] = daxpy_tp(a, b, scalar, N, iter);
+        Timings[DAXPY][k] = daxpy_tp(a, b, scalar, N, iter);
       }
     }
     break;
 
   case STRIAD:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
+        Timings[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[STRIAD][k] = striad_tp(a, b, c, d, N, iter);
+        Timings[STRIAD][k] = striad_tp(a, b, c, d, N, iter);
       }
     }
     break;
 
   case SDAXPY:
-    if (SEQ) {
+    if (Seq) {
       for (int k = 0; k < ITERS; k++) {
-        _t[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
+        Timings[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
       }
     } else {
       for (int k = 0; k < ITERS; k++) {
-        _t[SDAXPY][k] = sdaxpy_tp(a, b, c, N, iter);
+        Timings[SDAXPY][k] = sdaxpy_tp(a, b, c, N, iter);
       }
     }
     break;

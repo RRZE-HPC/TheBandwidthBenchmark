@@ -11,11 +11,11 @@
 
 #include "cli.h"
 
-int TYPE           = WS;
-int SEQ            = 0;
-int DATA_INIT_TYPE = 0;
-size_t N           = 125000000ull;
-size_t ITERS       = 10;
+int Type            = WS;
+int Seq             = 0;
+int DataInitVariant = 0;
+size_t N            = 125000000ULL;
+size_t Iter         = 10;
 
 #ifdef _NVCC
 int CUDA_DEVICE             = 0;
@@ -25,12 +25,12 @@ int THREAD_BLOCK_SIZE_SET   = 0;
 int THREAD_BLOCK_PER_SM_SET = 0;
 #endif
 
-void parseCLI(int argc, char **argv)
+void parseArguments(int argc, char **argv)
 {
   int co;
   opterr = 0;
 
-  while ((co = getopt(argc, argv, "hm:s:n:i:d:p:t:b:")) != -1)
+  while ((co = getopt(argc, argv, "hm:s:n:i:d:p:t:b:")) != -1) {
     switch (co) {
     case 'h': {
       printf(HELPTEXT);
@@ -39,14 +39,14 @@ void parseCLI(int argc, char **argv)
     }
 
     case 'm': {
-      if (strcmp(optarg, "ws") == 0)
-        TYPE = WS;
-      else if (strcmp(optarg, "tp") == 0) {
-        TYPE = TP;
-        SEQ  = 0;
+      if (strcmp(optarg, "ws") == 0) {
+        Type = WS;
+      } else if (strcmp(optarg, "tp") == 0) {
+        Type = TP;
+        Seq  = 0;
       } else if (strcmp(optarg, "seq") == 0) {
-        TYPE = SQ;
-        SEQ  = 1;
+        Type = SQ;
+        Seq  = 1;
       } else {
         printf("Unknown bench type %s\n", optarg);
         exit(1);
@@ -68,7 +68,7 @@ void parseCLI(int argc, char **argv)
     case 'n': {
       char *end;
       errno = 0;
-      ITERS = strtol(optarg, &end, 10);
+      Iter  = strtol(optarg, &end, 10);
       if (*end != '\0' || errno != 0) {
         fprintf(stderr, "Invalid numeric value for -n: %s\n", optarg);
         exit(1);
@@ -77,10 +77,10 @@ void parseCLI(int argc, char **argv)
     }
 
     case 'i': {
-      if (strcmp(optarg, "constant") == 0)
-        DATA_INIT_TYPE = 0;
-      else if (strcmp(optarg, "random") == 0) {
-        DATA_INIT_TYPE = 1;
+      if (strcmp(optarg, "constant") == 0) {
+        DataInitVariant = 0;
+      } else if (strcmp(optarg, "random") == 0) {
+        DataInitVariant = 1;
       } else {
         printf("Invalid data initialization type %s\n", optarg);
         exit(1);
@@ -130,11 +130,11 @@ void parseCLI(int argc, char **argv)
 #endif
 
     case '?': {
-      if (optopt == 'c')
+      if (optopt == 'c') {
         fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-      else if (isprint(optopt))
+      } else if (isprint(optopt)) {
         fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-      else
+      } else
         fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
       exit(1);
     }
@@ -142,6 +142,7 @@ void parseCLI(int argc, char **argv)
     default:
       abort();
     }
+  }
 
   for (int index = optind; index < argc; index++) {
     printf("Non-option argument %s\n", argv[index]);
