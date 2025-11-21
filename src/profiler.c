@@ -11,6 +11,7 @@
 #endif
 
 #include "cli.h"
+#include "constants.h"
 #include "likwid-marker.h"
 #include "profiler.h"
 #include "util.h"
@@ -59,20 +60,20 @@ static void computeStats(double *avgtime, double *maxtime, double *mintime, cons
   *maxtime = 0;
   *mintime = FLT_MAX;
 
-  for (int k = 1; k < Iter; k++) {
+  for (int k = 1; k < Iterations; k++) {
     *avgtime += Timings[j][k];
     *mintime = MIN(*mintime, Timings[j][k]);
     *maxtime = MAX(*maxtime, Timings[j][k]);
   }
 
-  *avgtime /= (double)(Iter - 1);
+  *avgtime /= (double)(Iterations - 1);
 }
 
 void allocateTimer()
 {
   Timings = (double **)malloc(NUMREGIONS * sizeof(double *));
   for (int i = 0; i < NUMREGIONS; i++) {
-    Timings[i] = malloc(Iter * sizeof(double));
+    Timings[i] = malloc(Iterations * sizeof(double));
   }
 }
 
@@ -86,23 +87,23 @@ void freeTimer()
 
 void profilerOpenFile(const int region)
 {
-  char filename[40];
+  char filename[MAXSTRLEN];
   sprintf(filename, "%s/%s.dat", DataDirectory, Regions[region].label);
   ProfilerFile = fopen(filename, "w");
   if (Regions[region].flops == 0) {
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "# %s: %lu words, no flops\n",
         Regions[region].label,
         Regions[region].words);
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "# N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)\n");
   } else {
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "# %s: %lu words, %lu flops\n",
         Regions[region].label,
         Regions[region].words,
         Regions[region].words);
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "# N  Bytes(MB)  Rate(GB/s)  Rate(GFlop/s)  Avg time(s)  Min time(s)  "
         "Max time(s)\n");
   }
@@ -112,7 +113,9 @@ void profilerOpenFile(const int region)
 
 void profilerCloseFile(void)
 {
-  fclose(ProfilerFile);
+  if (fclose(ProfilerFile) != 0) {
+    perror("Error closing profiler file");
+  }
 }
 
 void profilerPrintLine(const size_t N, const size_t iter, const int j)
@@ -134,29 +137,31 @@ void profilerPrintLine(const size_t N, const size_t iter, const int j)
 #endif
 
   computeStats(&avgtime, &maxtime, &mintime, j);
-  double bytes = (double)Regions[j].words * sizeof(double) * N * numThreads;
-  double flops = (double)Regions[j].flops * N * iter * numThreads;
+    double bytes = (double)Regions[j].words * sizeof(double) * (double)N * numThreads;
+  double flops = (double)Regions[j].flops * (double)(N * iter) * numThreads;
+  //double bytes = (double)Regions[j].words * sizeof(double) * N * numThreads;
+  //double flops = (double)Regions[j].flops * N * iter * numThreads;
 
   // N  Bytes(MB)  Rate(GB/s)  Rate(MFlop/s)  Avg time(s)  Min time(s)  Max
   // time(s)
   if (flops > 0) {
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "%lu %11.5f %11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
         N,
-        1.0E-06 * bytes,
-        1.0E-09 * bytes * iter / mintime,
-        1.0E-09 * flops / mintime,
+        MILLIONTH * bytes,
+        BILLIONTH * bytes * iter / mintime,
+        BILLIONTH * flops / mintime,
         avgtime,
         mintime,
         maxtime);
   }
   // N  Bytes(MB)  Rate(GB/s)  Avg time(s)  Min time(s)  Max time(s)
   else {
-    fprintf(ProfilerFile,
+    FPRINTF(ProfilerFile,
         "%lu %11.5f %11.2f %11.4f  %11.4f  %11.4f\n",
         N,
-        1.0E-06 * bytes,
-        1.0E-09 * bytes * iter / mintime,
+        MILLIONTH * bytes,
+        BILLIONTH * bytes * iter / mintime,
         avgtime,
         mintime,
         maxtime);
@@ -184,21 +189,21 @@ void profilerPrint(const size_t N)
 
   for (int j = 0; j < NUMREGIONS; j++) {
     computeStats(&avgtime, &maxtime, &mintime, j);
-    const double bytes = (double)Regions[j].words * sizeof(double) * N;
-    const double flops = (double)Regions[j].flops * N;
+    const double bytes = (double)Regions[j].words * sizeof(double) * (double)N;
+    const double flops = (double)Regions[j].flops * (double)N;
 
     if (flops > 0) {
       printf("%-12s%11.2f %11.2f %11.4f  %11.4f  %11.4f\n",
           Regions[j].label,
-          1.0E-09 * bytes / mintime,
-          1.0E-09 * flops / mintime,
+          BILLIONTH * bytes / mintime,
+          BILLIONTH * flops / mintime,
           avgtime,
           mintime,
           maxtime);
     } else {
       printf("%-12s%11.2f      -      %11.4f  %11.4f  %11.4f\n",
           Regions[j].label,
-          1.0E-09 * bytes / mintime,
+          BILLIONTH * bytes / mintime,
           avgtime,
           mintime,
           maxtime);

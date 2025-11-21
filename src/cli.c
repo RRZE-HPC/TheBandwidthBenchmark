@@ -10,12 +10,14 @@
 #include <unistd.h>
 
 #include "cli.h"
+#include "constants.h"
+#include "util.h"
 
-int Type            = WS;
-int Seq             = 0;
+int BenchmarkType   = WS;
+int Sequential      = 0;
 int DataInitVariant = 0;
-size_t N            = 125000000ULL;
-size_t Iter         = 10;
+size_t N            = SIZE;
+size_t Iterations   = NTIMES;
 
 #ifdef _NVCC
 int CUDA_DEVICE             = 0;
@@ -40,13 +42,13 @@ void parseArguments(int argc, char **argv)
 
     case 'm': {
       if (strcmp(optarg, "ws") == 0) {
-        Type = WS;
+        BenchmarkType = WS;
       } else if (strcmp(optarg, "tp") == 0) {
-        Type = TP;
-        Seq  = 0;
+        BenchmarkType = TP;
+        Sequential    = 0;
       } else if (strcmp(optarg, "seq") == 0) {
-        Type = SQ;
-        Seq  = 1;
+        BenchmarkType = SQ;
+        Sequential    = 1;
       } else {
         printf("Unknown bench type %s\n", optarg);
         exit(1);
@@ -57,9 +59,9 @@ void parseArguments(int argc, char **argv)
     case 's': {
       char *end;
       errno = 0;
-      N     = strtol(optarg, &end, 10);
+      N     = strtol(optarg, &end, INT_BASE);
       if (*end != '\0' || errno != 0) {
-        fprintf(stderr, "Invalid numeric value for -s: %s\n", optarg);
+        FPRINTF(stderr, "Invalid numeric value for -s: %s\n", optarg);
         exit(1);
       }
       break;
@@ -68,9 +70,9 @@ void parseArguments(int argc, char **argv)
     case 'n': {
       char *end;
       errno = 0;
-      Iter  = strtol(optarg, &end, 10);
+      Iterations = strtol(optarg, &end, INT_BASE);
       if (*end != '\0' || errno != 0) {
-        fprintf(stderr, "Invalid numeric value for -n: %s\n", optarg);
+        FPRINTF(stderr, "Invalid numeric value for -n: %s\n", optarg);
         exit(1);
       }
       break;
@@ -131,11 +133,11 @@ void parseArguments(int argc, char **argv)
 
     case '?': {
       if (optopt == 'c') {
-        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+        FPRINTF(stderr, "Option -%c requires an argument.\n", optopt);
       } else if (isprint(optopt)) {
-        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+        FPRINTF(stderr, "Unknown option `-%c'.\n", optopt);
       } else
-        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+        FPRINTF(stderr, "Unknown option character `\\x%x'.\n", optopt);
       exit(1);
     }
 

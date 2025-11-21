@@ -14,13 +14,13 @@
   {                                                                                      \
     LIKWID_MARKER_START(#tag);                                                           \
   }                                                                                      \
-  timing[tag][k] = call;                                                                 \
+  Timings[tag][k] = call;                                                                \
   _Pragma("omp parallel default(none)")                                                  \
   {                                                                                      \
     LIKWID_MARKER_STOP(#tag);                                                            \
   }
 #else
-#define PROFILE(tag, call) _t[tag][k] = call;
+#define PROFILE(tag, call) Timings[tag][k] = call;
 #endif
 
 typedef enum {
@@ -33,7 +33,7 @@ typedef enum {
   STRIAD,
   SDAXPY,
   NUMREGIONS
-} regions;
+} RegionType;
 
 extern double **Timings;
 extern void allocateTimer();

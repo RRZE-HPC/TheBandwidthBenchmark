@@ -18,6 +18,7 @@
 #endif
 
 #include "cli.h"
+#include "constants.h"
 #include "kernels.h"
 #include "profiler.h"
 #include "util.h"
@@ -43,25 +44,19 @@ int main(const int argc, char **argv)
 {
   const size_t bytesPerWord = sizeof(double);
 
-  // Data initialization from config.mk
-  N    = SIZE;
-  Iter = NTIMES;
-
-  // ensure N is divisible by 8
-  size_t numThreads = 1;
+  // Ensure N is aligned: each thread gets a chunk divisible by 8
+  const size_t alignment = 8;
 
 #ifdef _OPENMP
-
-#pragma omp parallel
-  {
-#pragma omp single
-    numThreads = omp_get_num_threads();
-  }
-
+  const size_t numThreads = omp_get_max_threads();
+#else
+  const size_t numThreads = 1;
 #endif
 
-  const size_t base = (N + numThreads - 1) / numThreads;
-  N                 = ((base + 7) & ~7) * numThreads;
+  // Round up N so each thread gets an 8-aligned chunk
+  const size_t perThread        = (N + numThreads - 1) / numThreads; // Ceiling division
+  const size_t alignedPerThread = (perThread + alignment - 1) & ~(alignment - 1);
+  N                             = alignedPerThread * numThreads;
 
   double *a;
   double *b;
@@ -77,7 +72,8 @@ int main(const int argc, char **argv)
   printf("\n");
   printf(BANNER);
   printf(HLINE);
-  printf("Total allocated datasize: %8.2f MB\n", 4.0 * bytesPerWord * N * 1.0E-06);
+  printf("Total allocated datasize: %8.2f MB\n",
+      NUMVECTORS * bytesPerWord * (double)N * MILLIONTH);
 
 #ifdef _OPENMP
   printf(HLINE);
@@ -99,7 +95,7 @@ int main(const int argc, char **argv)
 #endif
   }
 #else
-  SEQ = 1;
+  Sequential = 1;
 #endif
 
   allocateArrays(&a, &b, &c, &d, N);
@@ -108,7 +104,7 @@ int main(const int argc, char **argv)
   const double scalar = 0.1;
 
 #ifndef _NVCC
-  if (Type == TP || Type == SQ) {
+  if (BenchmarkType == TP || BenchmarkType == SQ) {
     printf("Running memory hierarchy sweeps\n");
 
     for (int j = 0; j < NUMREGIONS; j++) {
@@ -134,7 +130,7 @@ int main(const int argc, char **argv)
           }
         }
 
-        kernelSwitch(a, b, c, d, scalar, problemSize, Iter, iter, j);
+        kernelSwitch(a, b, c, d, scalar, problemSize, Iterations, iter, j);
 
         profilerPrintLine(problemSize, iter, j);
         problemSize = ((double)problemSize * 1.2);
@@ -146,7 +142,7 @@ int main(const int argc, char **argv)
   }
 #endif
 
-  for (int k = 0; k < Iter; k++) {
+  for (int k = 0; k < Iterations; k++) {
     PROFILE(INIT, init(b, scalar, N));
 #ifdef _NVCC
     PROFILE(SUM, sum(a, N));
@@ -164,7 +160,7 @@ int main(const int argc, char **argv)
   }
 
 #ifndef _NVCC
-  check(a, b, c, d, N, Iter);
+  check(a, b, c, d, N, Iterations);
 #endif
   profilerPrint(N);
 
@@ -177,44 +173,42 @@ void check(const double *a,
     const double *b,
     const double *c,
     const double *d,
-    const size_t N,
+    const size_t n,
     const size_t ITERS)
 {
   if (DataInitVariant == 1) {
     return;
   }
 
-  double epsilon;
-
   /* reproduce initialization */
-  double aj = 2.0;
-  double bj = 2.0;
-  double cj = 0.5;
-  double dj = 1.0;
+  double aj           = INIT_A;
+  double bj           = INIT_B;
+  double cj           = INIT_C;
+  double dj           = INIT_D;
+  const double scalar = INIT_SCALAR;
 
   /* now execute timing loop */
   for (int k = 0; k < ITERS; k++) {
-    const double scalar = 0.1;
-    bj                  = scalar;
-    cj                  = aj;
-    aj                  = aj * scalar;
-    aj                  = bj + (scalar * cj);
-    aj                  = aj + (scalar * bj);
-    aj                  = bj + (cj * dj);
-    aj                  = aj + (bj * cj);
+    bj = scalar;
+    cj = aj;
+    aj = aj * scalar;
+    aj = bj + (scalar * cj);
+    aj = aj + (scalar * bj);
+    aj = bj + (cj * dj);
+    aj = aj + (bj * cj);
   }
 
-  aj          = aj * (double)(N);
-  bj          = bj * (double)(N);
-  cj          = cj * (double)(N);
-  dj          = dj * (double)(N);
+  aj          = aj * (double)(n);
+  bj          = bj * (double)(n);
+  cj          = cj * (double)(n);
+  dj          = dj * (double)(n);
 
   double asum = 0.0;
   double bsum = 0.0;
   double csum = 0.0;
   double dsum = 0.0;
 
-  for (size_t i = 0; i < N; i++) {
+  for (size_t i = 0; i < n; i++) {
     asum += a[i];
     bsum += b[i];
     csum += c[i];
@@ -227,7 +221,7 @@ void check(const double *a,
   printf("        Observed  : %f %f %f \n", asum, bsum, csum);
 #endif
 
-  epsilon = 1.e-8;
+  double epsilon = CHECK_MAX_EPSILON;
 
   if (ABS(aj - asum) / asum > epsilon) {
     printf("Failed Validation on array a[]\n");
@@ -263,7 +257,7 @@ void kernelSwitch(double *restrict a,
 {
   switch (j) {
   case INIT:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[INIT][k] = init_seq(a, scalar, N, iter);
       }
@@ -275,7 +269,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case SUM:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[SUM][k] = sum_seq(a, N, iter);
       }
@@ -287,7 +281,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case COPY:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[COPY][k] = copy_seq(a, b, N, iter);
       }
@@ -299,7 +293,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case UPDATE:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[UPDATE][k] = update_seq(a, scalar, N, iter);
       }
@@ -311,7 +305,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case TRIAD:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[TRIAD][k] = triad_seq(a, b, c, scalar, N, iter);
       }
@@ -323,7 +317,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case DAXPY:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[DAXPY][k] = daxpy_seq(a, b, scalar, N, iter);
       }
@@ -335,7 +329,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case STRIAD:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[STRIAD][k] = striad_seq(a, b, c, d, N, iter);
       }
@@ -347,7 +341,7 @@ void kernelSwitch(double *restrict a,
     break;
 
   case SDAXPY:
-    if (Seq) {
+    if (Sequential) {
       for (int k = 0; k < ITERS; k++) {
         Timings[SDAXPY][k] = sdaxpy_seq(a, b, c, N, iter);
       }

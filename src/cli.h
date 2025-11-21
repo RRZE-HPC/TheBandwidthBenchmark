@@ -20,10 +20,10 @@ typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
   "  -d <int>        (If GPU enabled) GPU ID on which you want your program "            \
   "to run\n"
 
-extern int Type;
-extern int Seq;
+extern int BenchmarkType;
+extern int Sequential;
 extern size_t N;
-extern size_t Iter;
+extern size_t Iterations;
 extern int DataInitVariant;
 
 #ifdef _NVCC
