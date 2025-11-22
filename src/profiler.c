@@ -118,7 +118,7 @@ void profilerCloseFile(void)
   }
 }
 
-void profilerPrintLine(const size_t N, const size_t iter, const int j)
+void profilerPrintLine(const size_t N, const size_t iter, const int kernel)
 {
   size_t bytesPerWord = sizeof(double);
   double avgtime;
@@ -136,9 +136,9 @@ void profilerPrintLine(const size_t N, const size_t iter, const int j)
   }
 #endif
 
-  computeStats(&avgtime, &maxtime, &mintime, j);
-    double bytes = (double)Regions[j].words * sizeof(double) * (double)N * numThreads;
-  double flops = (double)Regions[j].flops * (double)(N * iter) * numThreads;
+  computeStats(&avgtime, &maxtime, &mintime, kernel);
+  double bytes = (double)Regions[kernel].words * sizeof(double) * (double)N * numThreads;
+  double flops = (double)Regions[kernel].flops * (double)(N * iter) * numThreads;
   //double bytes = (double)Regions[j].words * sizeof(double) * N * numThreads;
   //double flops = (double)Regions[j].flops * N * iter * numThreads;
 

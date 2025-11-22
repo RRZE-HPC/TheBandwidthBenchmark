@@ -14,6 +14,7 @@
 #define INIT_D 1.0
 #define INIT_SCALAR 0.1
 
+#define INCACHE_REPS 5
 #define STARTSIZE 100
 #define EXPANSION 1.2
 #define CHECK_MAX_EPSILON 1.e-8

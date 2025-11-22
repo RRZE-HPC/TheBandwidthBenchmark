@@ -42,6 +42,6 @@ extern void profilerInit();
 extern void profilerPrint(size_t size);
 extern void profilerOpenFile(int region);
 extern void profilerCloseFile(void);
-extern void profilerPrintLine(size_t N, size_t iter, int j);
+extern void profilerPrintLine(size_t N, size_t iter, int kernel);
 
 #endif // __PROFILER_H
