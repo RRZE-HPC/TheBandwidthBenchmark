@@ -14,8 +14,8 @@
 #include "util.h"
 
 int BenchmarkType   = WS;
-int Sequential      = 0;
-int DataInitVariant = 0;
+bool Sequential     = false;
+int DataInitVariant = CONSTANT;
 size_t N            = SIZE;
 size_t Iterations   = NTIMES;
 
@@ -45,13 +45,13 @@ void parseArguments(int argc, char **argv)
         BenchmarkType = WS;
       } else if (strcmp(optarg, "tp") == 0) {
         BenchmarkType = TP;
-        Sequential    = 0;
+        Sequential    = false;
       } else if (strcmp(optarg, "seq") == 0) {
         BenchmarkType = SQ;
-        Sequential    = 1;
+        Sequential    = true;
       } else {
         printf("Unknown bench type %s\n", optarg);
-        exit(1);
+        exit(EXIT_FAILURE);
       }
       break;
     }
@@ -60,32 +60,33 @@ void parseArguments(int argc, char **argv)
       char *end;
       errno = 0;
       N     = strtol(optarg, &end, INT_BASE);
+      N     = (N * GIGA) / (4 * sizeof(double)); // Convert GB to number of doubles
       if (*end != '\0' || errno != 0) {
         FPRINTF(stderr, "Invalid numeric value for -s: %s\n", optarg);
-        exit(1);
+        exit(EXIT_FAILURE);
       }
       break;
     }
 
     case 'n': {
       char *end;
-      errno = 0;
+      errno      = 0;
       Iterations = strtol(optarg, &end, INT_BASE);
       if (*end != '\0' || errno != 0) {
         FPRINTF(stderr, "Invalid numeric value for -n: %s\n", optarg);
-        exit(1);
+        exit(EXIT_FAILURE);
       }
       break;
     }
 
     case 'i': {
       if (strcmp(optarg, "constant") == 0) {
-        DataInitVariant = 0;
+        DataInitVariant = CONSTANT;
       } else if (strcmp(optarg, "random") == 0) {
-        DataInitVariant = 1;
+        DataInitVariant = RANDOM;
       } else {
         printf("Invalid data initialization type %s\n", optarg);
-        exit(1);
+        exit(EXIT_FAILURE);
       }
       break;
     }

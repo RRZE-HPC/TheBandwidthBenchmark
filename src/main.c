@@ -76,6 +76,7 @@ int main(const int argc, char **argv)
   printf(HLINE);
   printf("Total allocated datasize: %8.2f MB\n",
       NUMVECTORS * bytesPerWord * (double)N * MILLIONTH);
+  printf("Doing %zu repetitions per kernel\n", Iterations);
 
 #ifdef _OPENMP
   printf(HLINE);
@@ -97,7 +98,7 @@ int main(const int argc, char **argv)
 #endif
   }
 #else
-  Sequential = 1;
+  Sequential = true;
 #endif
 
   allocateArrays(&a, &b, &c, &d, N);
@@ -145,7 +146,7 @@ void check(const double *a,
     const size_t n,
     const size_t ITERS)
 {
-  if (DataInitVariant == 1) {
+  if (DataInitVariant == RANDOM) {
     return;
   }
 
@@ -311,7 +312,7 @@ static void runMemoryHierarchySweeps(double *restrict a,
 
     profilerOpenFile(kernel);
 
-    while (problemSize < SIZE) {
+    while (problemSize < N) {
 
       // Target runtime: 0.3 seconds for reliable measurements
       const double targetTime   = 0.3;

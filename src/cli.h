@@ -5,9 +5,11 @@
 #ifndef CLI_H
 #define CLI_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
-typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
+typedef enum { WS = 0, TP, SQ, NUMTYPES } ModeType;
+typedef enum { CONSTANT = 0, RANDOM } InitType;
 
 #define HELPTEXT                                                                         \
   "Usage: bwBench [options]\n\n"                                                         \
@@ -21,7 +23,7 @@ typedef enum { WS = 0, TP, SQ, NUMTYPES } types;
   "to run\n"
 
 extern int BenchmarkType;
-extern int Sequential;
+extern bool Sequential;
 extern size_t N;
 extern size_t Iterations;
 extern int DataInitVariant;

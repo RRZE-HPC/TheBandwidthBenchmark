@@ -5,6 +5,7 @@
 
 #define MILLIONTH 1.0E-06
 #define BILLIONTH 1.0E-09
+#define GIGA 1073741824ULL
 #define INT_BASE 10
 
 #define NUMVECTORS 4.0
